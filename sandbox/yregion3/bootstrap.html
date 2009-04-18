@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>YRegion Test Suite</title>  
+<!-- CSS -->
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0pr2/build/cssreset/reset.css" />
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0pr2/build/cssfonts/fonts.css" />
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0pr2/build/cssgrids/grids.css" />
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0pr2/build/cssbase/base-context.css" />
+<!-- JS -->
+<script type="text/javascript" src="http://yui.yahooapis.com/3.0.0pr2/build/yui/yui.js"></script>
+
+<!-- Testcase //-->
+<script type="text/javascript">
+YRegion_config = {
+	_debug: false,
+	_loader: { 
+		combine: false,	
+	    filter     : 'debug',      // request debug versions of modules 
+	    useBrowserConsole : true,  // don't log to native console 
+	    logLevel   : 'warn',       // don't print info messages 
+	    debug : true               // broadcast yui:log (this is the default) 
+	},
+	require: ['console', 'yuitest'],
+	actions: {
+		'region:ready': function() {
+		    console.log (1);
+			var yconsole = new this.Y.Console(); 
+		 
+		    // Ignore any message with the string "green" in the text 
+		    yconsole.on('entry', function (e) { 
+		        if (e.message.message.indexOf('mouse:') > -1) { 
+		            e.preventDefault(); 
+		        } 
+		    }); 
+			
+			yconsole.render();
+
+		},
+		'region:contentready': function() {
+		    console.log (2);
+		},
+		'mouse:mouserover': function() {
+		    console.log (4);
+		},
+		'test:ready': function () {
+			/* starting the testing process */ 
+			var Y = this.Y, 
+				region = this; // reference to the region that we need to test
+			
+			//add the test cases and suites 
+			Y.Test.Runner.add(new Y.Test.Case({
+				
+				name: "yregion3 TestSuite",
+				
+				test_checkingYRegionInitializationProcess: function(){
+					Y.Assert.isTrue(region.node.hasClass('region'), "incorrect region class");
+				}
+				
+			})); 
+			
+			//run all tests 
+			Y.Test.Runner.run();
+			
+			/* finishing the testing process */
+		}
+	}
+};
+
+</script>
+
+<script type="text/javascript" src="../../src/yregion3/js/yregion3.js"></script>
+
+<script type="text/javascript">
+
+YRegion.initRegion ('demo', {
+	ns: 'em-ep-video-player',
+	args: {},
+	actions: {
+		'region:ready': function() {
+		    console.log (1);
+		},
+		'region:contentready': function() {
+		    console.log (2);
+		},
+		'test:ready': function() {
+		    console.log (3);
+		},
+		'mouse:mouserover': function() {
+		    console.log (4);
+		}
+	}
+});
+
+</script>
+</head>
+<body class="yui-skin-sam">
+    <div id="doc" class="caridy">
+
+		<div id="demo">
+			<div class="hd"><h3 class="title">Title</h3></div>
+		</div>
+
+    </div>
+</body>
+</html>
