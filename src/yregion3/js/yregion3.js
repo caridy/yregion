@@ -1,19 +1,15 @@
-/**
- * YRegion Utility provides an application layer to control different modules/regions in the same page.
- * @module yregion
- */
-
-/**
+/*
+ * Provides YRegion Utility definition based on YUI 3.x.
+ *
  * YRegion allows us to define the functionality of different areas (regions) on the page, 
  * controlling the events, the loading process of its dependencies and setting a secure scope 
  * to define the region functionality in a consistent way. 
  * 
  * It also creates a communication infrastructure layer among the regions on the page. 
  * 
- * @class YRegion
- * @constructor
+ * @module YRegion
+ * @static
  */
-
 YRegion = window.YRegion || function(){
     var obj = {},
 	    _Y = null,
@@ -39,7 +35,7 @@ YRegion = window.YRegion || function(){
 		_loaderQueue = [],
 		_bd = null;
 
-	/**
+	/*
 	 * Add a list of files to the hash table with the cachable files.
 	 * @method _cache
 	 * @private
@@ -53,7 +49,7 @@ YRegion = window.YRegion || function(){
 		  _HASHTABLE.push ({fullpath: files[i]});
 		}
 	}
-	/**
+	/*
 	 * Check if a file object was already cached based in the fullpath
 	 * @method _cached
 	 * @private
@@ -75,7 +71,7 @@ YRegion = window.YRegion || function(){
 		}
 		return false;
 	}
-	/**
+	/*
 	 * Continue with the loading process, removing the first set from the list, 
 	 * and continue with the next in line.
 	 * @method _loaderNext
@@ -94,7 +90,7 @@ YRegion = window.YRegion || function(){
 			i.callback.call();
 		}
 	}
-	/**
+	/*
 	 * Create a message object based on a DOM Event
 	 * @method _loaderDispatch
 	 * @private
@@ -115,7 +111,7 @@ YRegion = window.YRegion || function(){
 			_Y.use.apply(_Y, r);
 		}
 	}
-	/**
+	/*
 	 * Create a message object based on a DOM Event, the message object will be passed
 	 * to all the listeners, and can be populated using the signature event.
 	 * @method _createMsgObject
@@ -136,7 +132,7 @@ YRegion = window.YRegion || function(){
 		};
 		return o;
 	}
-	/**
+	/*
 	 * Transform the target element into a semantic object
 	 * @method _getSemantic
 	 * @private
@@ -175,7 +171,7 @@ YRegion = window.YRegion || function(){
 	  }
 	  return o;
 	}
-	/**
+	/*
 	 * Parse an string and return the list of hooks
 	 * @method _parseHooks
 	 * @private
@@ -191,7 +187,7 @@ YRegion = window.YRegion || function(){
 	  }
 	  return hooks;
 	}
-	/**
+	/*
 	 * Create a new instance of a region.
 	 * @method _initRegion
 	 * @private
@@ -234,7 +230,7 @@ YRegion = window.YRegion || function(){
 			}
 		}
 	}
-	/**
+	/*
 	 * Inject a plugin into the global region represented by "document.body".
 	 * @method _initPlugin
 	 * @private
@@ -245,7 +241,7 @@ YRegion = window.YRegion || function(){
 	function _initPlugin (name) {
 		_bd.initPlugin(name);
 	}
-	/**
+	/*
 	 * Inspecting child regions to determine which region owns the target element.
 	 * @method _trickling
 	 * @private
@@ -267,7 +263,7 @@ YRegion = window.YRegion || function(){
 		}
 		return region; // chain support
 	}
-	/**
+	/*
 	 * Parsing an url using strict of loose mode.
 	 * TODO: modify to use strict mode with an static regex
 	 * @method _trickling
@@ -294,7 +290,7 @@ YRegion = window.YRegion || function(){
 		});
 		return uri;
 	}
-	/**
+	/*
 	 * Creating an object with the shorthands references.
 	 * @method _getShorthands
 	 * @return {Object} A object with the default list of shorthands.
@@ -310,7 +306,7 @@ YRegion = window.YRegion || function(){
 		this.ns = ns;
 	};
 
-	/**
+	/*
 	 * <p>
 	 * Definiting an object to control the loading process for the Region Definitions, everytime you 
 	 * try to initialize a region, the new region instance needs to load the region definition 
@@ -322,7 +318,7 @@ YRegion = window.YRegion || function(){
 	 * @return {Object} Get Utility handler.
 	 */
 	_modLoader.prototype = {
-		/**
+		/*
 		 * <p>
 		 * loading the Region Definition
 		 * </p>
@@ -339,7 +335,7 @@ YRegion = window.YRegion || function(){
 				}
 				return _Y.io.script(uri, callback);
 			},
-			/**
+			/*
 			 * <p>
 			 * setting the Region Definition, when a new region definition is included in the current page,
 			 * these method will be executed to notify to everybody that a new region definition is ready.
@@ -355,7 +351,7 @@ YRegion = window.YRegion || function(){
 				// finally, notifying everybody that the region definition is ready
 			    this.notify();
 			},
-			/**
+			/*
 			 * <p>
 			 * creating a new instance, inheriting the region definition methods.
 			 * </p>
@@ -371,7 +367,7 @@ YRegion = window.YRegion || function(){
 				/* initializing the region instance */
 				mod.init();
 			},
-			/**
+			/*
 			 * <p>
 			 * subscribing a new instance to this region definition, when the class become available, the 
 			 * subscriber will get a notification.
@@ -389,7 +385,7 @@ YRegion = window.YRegion || function(){
 					this.notify ();
 				}
 			},
-			/**
+			/*
 			 * <p>
 			 * notifying to all the subscribers that the region definition is ready, this process will 
 			 * garranty that this region instances will be instantiated after the class become available.
@@ -664,7 +660,7 @@ _Y.log ('[YRegion] init an AJAX region', 'info');
 				}
 				return this; /* chaining support */
 			},
-			/**
+			/*
 			 * <p>
 			 * setting a new child for the current region.
 			 * </p>
@@ -679,7 +675,7 @@ _Y.log ('[YRegion] init an AJAX region', 'info');
 				}
 				return this; /* chaining support */
 			},
-			/**
+			/*
 			 * <p>
 			 * getting a child region based on the GUID.
 			 * </p>
@@ -690,7 +686,7 @@ _Y.log ('[YRegion] init an AJAX region', 'info');
 			getChild: function (guid) {
 				return ((this.childs && this.childs.hasOwnProperty(guid))?this.child[guid]:null);
 			},
-			/**
+			/*
 			 * <p>
 			 * getting a node element based on the CSS selector.
 			 * </p>
@@ -744,29 +740,6 @@ _Y.log ('[YRegion] init an AJAX region', 'info');
 				}
 				return o.flagged;
 			},
-/* delete this */
-on1: function (layer, listener, args) {
-	this._ce = this._ce || {};
-	if (!this._ce.hasOwnProperty(layer)) {
-		this._ce[layer] = new this.Y.Event.Target();
-		this._ce[layer].publish(layer)
-	}
-	this._ce[layer].subscribe(layer, listener, this, args);
-	return this; /* chaining */
-},
-fire1: function (layer, o) {
-	o = o || {};
-	if (this._ce && this._ce.hasOwnProperty(layer)) {
-		if (layer.indexOf('mouse') !== 0) { 
-			_Y.log ('[YRegion] Firing a message: '+ layer, 'info', {
-				msg: o,
-				emisor: this
-			}); 
-		}
-		this._ce[layer].fire (layer, o);
-	}
-	return o.flagged;
-},
 			signature: function (args) {
 				var a = (args[1]?args[1][0]:null);
 				/* checking the current status for this event, it's the event was already stopped, the response is null */
@@ -774,7 +747,7 @@ fire1: function (layer, o) {
 			},
 			inject: obj.inject,
 			notify: obj.notify,
-			/**
+			/*
 			 * <p>
 			 * Process a list of messages, and bubble up those messages all the way up thru the parents
 			 * </p>
@@ -805,7 +778,7 @@ fire1: function (layer, o) {
 				}
 				return o.flagged;
 			},
-			/**
+			/*
 			 * <p>
 			 * Process a message, and broadcasting the message to all the child regions
 			 * </p>
@@ -1002,7 +975,7 @@ fire1: function (layer, o) {
 		//--------------------------------------
 	   	//  Begin public interface definition
 	   	//--------------------------------------	
-		/**
+		/*
 	     * <p>
 	     * Searching for an event owner based on the classname, it's similar to the ancestor method but applying the same routine to the node itself
 	     * </p>
@@ -1021,7 +994,7 @@ fire1: function (layer, o) {
 			}
 			return node;
 	    };
-	    /**
+	    /*
 	     * <p>
 	     * Searching for an event owner based on the tagMame, it's similar to the ancestor method but applying the same routine to the node itself
 	     * </p>
@@ -1041,7 +1014,7 @@ fire1: function (layer, o) {
 			}
 			return node;
 		};
-	    /**
+	    /*
 	     * <p>
 	     * Testing is the node element is child of ancestor element
 	     * </p>
@@ -1061,7 +1034,7 @@ fire1: function (layer, o) {
 			return false;
 		};
 		obj.strictMode = true; /* default mode for the URIs in your website */
-		/**
+		/*
 	    * augment an url with more parameters, overriding...
 	    * @public
 	    * @param {string} url 
@@ -1107,7 +1080,7 @@ fire1: function (layer, o) {
 	    };
 		
 		
-		/**
+		/*
 	     * <p>
 	     * Analizing all the classes for the node, and getting the hooks.
 	     * </p>
@@ -1122,7 +1095,7 @@ fire1: function (layer, o) {
 			}
 		  	return hooks;
 		};
-		/**
+		/*
 	     * <p>
 	     * getting the real YUI Button reference from a dom element, usually the target for a certain event
 	     * </p>
@@ -1134,7 +1107,7 @@ fire1: function (layer, o) {
 			// we don't have support for YUI Buttons so far.
 			return null;
 		};
-		/**
+		/*
 	     * <p>
 	     * inserting a CSS or JS block (inline block) in the current document
 	     * </p>
