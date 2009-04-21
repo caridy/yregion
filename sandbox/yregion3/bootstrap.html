@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-<title>YRegion Test Suite</title>  
+<title>YRegion3 Test Suite</title>  
 <!-- CSS -->
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0pr2/build/cssreset/reset.css" />
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.0.0pr2/build/cssfonts/fonts.css" />
@@ -12,7 +12,7 @@
 
 <!-- Testcase //-->
 <script type="text/javascript">
-YRegion_config = {
+YRegion3_config = {
 	_debug: false,
 	_loader: { 
 		combine: false,	
@@ -53,7 +53,7 @@ YRegion_config = {
 				
 				name: "yregion3 TestSuite",
 				
-				test_checkingYRegionInitializationProcess: function(){
+				test_checkingYRegion3InitializationProcess: function(){
 					Y.Assert.isTrue(region.node.hasClass('region'), "incorrect region class");
 				}
 				
@@ -73,7 +73,7 @@ YRegion_config = {
 
 <script type="text/javascript">
 
-YRegion.initRegion ('demo', {
+YRegion3.initRegion ('demo', {
 	ns: 'em-ep-video-player',
 	args: {},
 	actions: {

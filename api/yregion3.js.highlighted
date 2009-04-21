@@ -1,0 +1,1312 @@
+<div class="highlight"><pre><span class="c">/** </span>
+<span class="c"> * Provides YRegion3 Utility definition based on YUI 3.x.</span>
+<span class="c"> *</span>
+<span class="c"> * YRegion3 allows us to define the functionality of different areas (regions) on the page, </span>
+<span class="c"> * controlling the events, the loading process of its dependencies and setting a secure scope </span>
+<span class="c"> * to define the region functionality in a consistent way. </span>
+<span class="c"> * </span>
+<span class="c"> * It also creates a communication infrastructure layer among the regions on the page. </span>
+<span class="c"> *</span>
+<span class="c"> * @module yregion3</span>
+<span class="c"> */</span>
+
+<span class="c">/**</span>
+<span class="c"> * Provides YRegion3 Utility methods.</span>
+<span class="c"> *</span>
+<span class="c"> * @class YRegion3</span>
+<span class="c"> * @static</span>
+<span class="c"> */</span>
+<span class="nx">YRegion3</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">YRegion3</span> <span class="o">||</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{}</span><span class="o">,</span>
+	    <span class="nx">_Y</span> <span class="o">=</span> <span class="kc">null</span><span class="o">,</span>
+		<span class="nx">_LOADERS</span> <span class="o">=</span> <span class="p">{}</span><span class="o">,</span>
+		<span class="nx">_MODS</span> <span class="o">=</span> <span class="p">{}</span><span class="o">,</span>
+		<span class="nx">_PLUGINS</span> <span class="o">=</span> <span class="p">{}</span><span class="o">,</span>
+		<span class="nx">_HASHTABLE</span> <span class="o">=</span> <span class="p">[]</span><span class="o">,</span>
+		<span class="nx">_region_class</span> <span class="o">=</span> <span class="s1">&#39;region&#39;</span><span class="o">,</span>
+		<span class="nx">_reHooks</span> <span class="o">=</span> <span class="sr">/(?:^|\s+)(target|hook)([\w-\.]+)(?:\s+|$)/</span><span class="o">,</span>
+		<span class="nx">_reTrim</span> <span class="o">=</span> <span class="sr">/^\s+|\s+$/g</span><span class="o">,</span>
+		<span class="nx">_reURL</span> <span class="o">=</span> <span class="p">{</span>
+				<span class="nx">key</span><span class="o">:</span> <span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="o">,</span><span class="s2">&quot;protocol&quot;</span><span class="o">,</span><span class="s2">&quot;authority&quot;</span><span class="o">,</span><span class="s2">&quot;userInfo&quot;</span><span class="o">,</span><span class="s2">&quot;user&quot;</span><span class="o">,</span><span class="s2">&quot;password&quot;</span><span class="o">,</span><span class="s2">&quot;host&quot;</span><span class="o">,</span><span class="s2">&quot;port&quot;</span><span class="o">,</span><span class="s2">&quot;relative&quot;</span><span class="o">,</span><span class="s2">&quot;path&quot;</span><span class="o">,</span><span class="s2">&quot;directory&quot;</span><span class="o">,</span><span class="s2">&quot;file&quot;</span><span class="o">,</span><span class="s2">&quot;query&quot;</span><span class="o">,</span><span class="s2">&quot;anchor&quot;</span><span class="p">]</span><span class="o">,</span>
+				<span class="nx">q</span><span class="o">:</span> <span class="p">{</span>
+					<span class="nx">name</span><span class="o">:</span>   <span class="s2">&quot;queryKey&quot;</span><span class="o">,</span>
+					<span class="nx">parser</span><span class="o">:</span> <span class="sr">/(?:^|&amp;)([^&amp;=]*)=?([^&amp;]*)/g</span>
+				<span class="p">}</span><span class="o">,</span>
+				<span class="nx">parser</span><span class="o">:</span> <span class="p">{</span>
+					<span class="nx">strict</span><span class="o">:</span> <span class="sr">/^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*):?([^:@]*))?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/</span><span class="o">,</span>
+					<span class="nx">loose</span><span class="o">:</span>  <span class="sr">/^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/</span><span class="p">)</span><span class="o">?</span><span class="p">((</span><span class="o">?:</span><span class="p">(([</span><span class="o">^:</span><span class="err">@</span><span class="p">]</span><span class="o">*</span><span class="p">)</span><span class="o">:?</span><span class="p">([</span><span class="o">^:</span><span class="err">@</span><span class="p">]</span><span class="o">*</span><span class="p">))</span><span class="o">?</span><span class="err">@</span><span class="p">)</span><span class="o">?</span><span class="p">([</span><span class="o">^:\/?</span><span class="err">#</span><span class="p">]</span><span class="o">*</span><span class="p">)(</span><span class="o">?::</span><span class="p">(</span><span class="o">\</span><span class="nx">d</span><span class="o">*</span><span class="p">))</span><span class="o">?</span><span class="p">)(((</span><span class="o">\/</span><span class="p">(</span><span class="o">?:</span><span class="p">[</span><span class="o">^?</span><span class="err">#</span><span class="p">](</span><span class="o">?!</span><span class="p">[</span><span class="o">^?</span><span class="err">#</span><span class="o">\/</span><span class="p">]</span><span class="o">*\</span><span class="p">.[</span><span class="o">^?</span><span class="err">#</span><span class="o">\/</span><span class="p">.]</span><span class="o">+</span><span class="p">(</span><span class="o">?:</span><span class="p">[</span><span class="o">?</span><span class="err">#</span><span class="p">]</span><span class="o">|</span><span class="nx">$</span><span class="p">)))</span><span class="o">*\/?</span><span class="p">)</span><span class="o">?</span><span class="p">([</span><span class="o">^?</span><span class="err">#</span><span class="o">\/</span><span class="p">]</span><span class="o">*</span><span class="p">))(</span><span class="o">?:\?</span><span class="p">([</span><span class="o">^</span><span class="err">#</span><span class="p">]</span><span class="o">*</span><span class="p">))</span><span class="o">?</span><span class="p">(</span><span class="o">?:</span><span class="err">#</span><span class="p">(.</span><span class="o">*</span><span class="p">))</span><span class="o">?</span><span class="p">)</span><span class="o">/</span>
+				<span class="p">}</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">_waiting</span> <span class="o">=</span> <span class="p">[]</span><span class="o">,</span>
+		<span class="nx">_loaderQueue</span> <span class="o">=</span> <span class="p">[]</span><span class="o">,</span>
+		<span class="nx">_bd</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+
+	<span class="c">/**</span>
+<span class="c">	 * Add a list of files to the hash table with the cachable files.</span>
+<span class="c">	 * @method _cache</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">	 * @param {Array} files An array of files objects.</span>
+<span class="c">     * @return void</span>
+<span class="c">	 */</span>
+	<span class="kd">function</span> <span class="nx">_cache</span> <span class="p">(</span><span class="nx">files</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">i</span><span class="o">;</span>
+		<span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">files</span><span class="p">.</span><span class="nx">length</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+		  <span class="nx">_HASHTABLE</span><span class="p">.</span><span class="nx">push</span> <span class="p">({</span><span class="nx">fullpath</span><span class="o">:</span> <span class="nx">files</span><span class="p">[</span><span class="nx">i</span><span class="p">]});</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="c">/**</span>
+<span class="c">	 * Check if a file object was already cached based in the fullpath</span>
+<span class="c">	 * @method _cached</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">	 * @param {Object} f File object.</span>
+<span class="c">     * @return {Boolean} Whether or not the file was cached. </span>
+<span class="c">	 */</span>
+	<span class="kd">function</span> <span class="nx">_cached</span> <span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">i</span><span class="o">;</span>
+		<span class="nx">f</span> <span class="o">=</span> <span class="nx">f</span> <span class="o">||</span> <span class="p">{};</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">verifier</span> <span class="o">&amp;&amp;</span> <span class="nx">f</span><span class="p">.</span><span class="nx">verifier</span><span class="p">.</span><span class="nx">call</span><span class="p">())</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			<span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">_HASHTABLE</span><span class="p">.</span><span class="nx">length</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+			  <span class="k">if</span> <span class="p">(</span><span class="nx">_HASHTABLE</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">fullpath</span> <span class="o">==</span> <span class="nx">f</span><span class="p">.</span><span class="nx">fullpath</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+			  <span class="p">}</span>
+		    <span class="p">}</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+	<span class="p">}</span>
+	<span class="c">/**</span>
+<span class="c">	 * Continue with the loading process, removing the first set from the list, </span>
+<span class="c">	 * and continue with the next in line.</span>
+<span class="c">	 * @method _loaderNext</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">	 * @param {Boolean} notify Whether or not the callback method should be called. </span>
+<span class="c">     * @return void</span>
+<span class="c">	 */</span>
+	<span class="kd">function</span> <span class="nx">_loaderNext</span> <span class="p">(</span><span class="nx">notify</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="nx">_loaderQueue</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
+		<span class="c">/* we want to speed up the loading process, so, the first thing we do</span>
+<span class="c">		   is actually starting the loading process for the next region */</span>
+		<span class="nx">_loaderDispatch</span><span class="p">();</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">notify</span> <span class="o">&amp;&amp;</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+			<span class="c">/* notifying thru the callback function that everything was ok */</span>
+			<span class="nx">i</span><span class="p">.</span><span class="nx">callback</span><span class="p">.</span><span class="nx">call</span><span class="p">();</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="c">/**</span>
+<span class="c">	 * Create a message object based on a DOM Event</span>
+<span class="c">	 * @method _loaderDispatch</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">	 * @return void</span>
+<span class="c">	 */</span>
+	<span class="kd">function</span> <span class="nx">_loaderDispatch</span> <span class="p">()</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">r</span><span class="o">;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">_loaderQueue</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] [Loader Queue] loading... &#39;</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">_loaderQueue</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+			<span class="nx">r</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">_loaderQueue</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">require</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
+			
+			<span class="c">/* inserting the requirements (Y.use) */</span>
+			<span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">Y</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] [Loader Queue] success...&#39;</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="p">);</span>
+				<span class="nx">_loaderNext</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+			<span class="p">});</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">use</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">_Y</span><span class="o">,</span> <span class="nx">r</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="c">/**</span>
+<span class="c">	 * Create a message object based on a DOM Event, the message object will be passed</span>
+<span class="c">	 * to all the listeners, and can be populated using the signature event.</span>
+<span class="c">	 * @method _createMsgObject</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">	 * @param {Object} e - YUI Event Object.</span>
+<span class="c">     * @return {Object} the message object with the status and the stopEvent method</span>
+<span class="c">	 */</span>
+	<span class="kd">function</span> <span class="nx">_createMsgObject</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="p">{</span> 
+			<span class="nx">event</span><span class="o">:</span> <span class="nx">e</span><span class="o">,</span> 
+			<span class="nx">flagged</span><span class="o">:</span> <span class="kc">false</span> 
+		<span class="p">};</span>
+		<span class="nx">o</span><span class="p">.</span><span class="nx">target</span> <span class="o">=</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span> <span class="o">||</span> <span class="nx">_bd</span><span class="p">.</span><span class="nx">node</span><span class="o">;</span>
+		<span class="nx">o</span><span class="p">.</span><span class="nx">stopEvent</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span> 
+			<span class="nx">o</span><span class="p">.</span><span class="nx">flagged</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span> 
+			<span class="nx">e</span><span class="p">.</span><span class="nx">halt</span><span class="p">();</span> <span class="c">// equivalent to: e.stopPropagation() plus e.preventDefault() </span>
+		<span class="p">};</span>
+		<span class="k">return</span> <span class="nx">o</span><span class="o">;</span>
+	<span class="p">}</span>
+	<span class="c">/**</span>
+<span class="c">	 * Transform the target element into a semantic object</span>
+<span class="c">	 * @method _getSemantic</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">	 * @param {Object} e - DOM Event reference.</span>
+<span class="c">     * @return {Object} Semantic object that represents the semantic of the target element</span>
+<span class="c">	 */</span>
+	<span class="kd">function</span> <span class="nx">_getSemantic</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+	  <span class="nx">e</span> <span class="o">=</span> <span class="nx">e</span> <span class="o">||</span> <span class="p">{};</span>
+	  <span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="nx">_createMsgObject</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="o">,</span> <span class="nx">el</span><span class="o">;</span>
+	  <span class="c">/* analyzing the semantic meaning of the target */</span>
+	  <span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">event</span> <span class="o">&amp;&amp;</span> <span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">)</span> <span class="p">{</span>
+	  	<span class="c">//o.trigger = obj.getOwnerByTagName(o.target, &#39;trigger&#39;, 5);</span>
+		<span class="nx">o</span><span class="p">.</span><span class="nx">anchor</span> <span class="o">=</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getOwnerByTagName</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="o">,</span> <span class="s1">&#39;A&#39;</span><span class="o">,</span> <span class="mi">5</span><span class="p">);</span>
+	  	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">o</span><span class="p">.</span><span class="nx">yuibutton</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">o</span><span class="p">.</span><span class="nx">anchor</span><span class="p">)</span> <span class="p">{</span>
+	  		<span class="k">if</span> <span class="p">((</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s1">&#39;tagName&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;INPUT&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">input</span> <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">))</span> <span class="p">{</span>
+  			<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">((</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s1">&#39;tagName&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;BUTTON&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">button</span> <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">))</span> <span class="p">{</span>
+  			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+				<span class="nx">o</span><span class="p">.</span><span class="nx">select</span> <span class="o">=</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getOwnerByTagName</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="o">,</span> <span class="s1">&#39;SELECT&#39;</span><span class="o">,</span> <span class="mi">2</span><span class="p">);</span>
+  				<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">select</span><span class="p">)</span> <span class="p">{</span>
+				  <span class="nx">el</span> <span class="o">=</span> <span class="nx">_Y</span><span class="p">.</span><span class="nx">Node</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">select</span><span class="p">);</span>
+  				  <span class="nx">o</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">el</span><span class="p">[</span><span class="nx">el</span><span class="p">.</span><span class="nx">selectedIndex</span><span class="p">].</span><span class="nx">value</span><span class="o">;</span>
+				<span class="p">}</span>
+  			<span class="p">}</span>
+		<span class="p">}</span>
+		<span class="c">/* checking if the target is a yuibutton */</span>
+		<span class="k">if</span> <span class="p">((</span><span class="nx">o</span><span class="p">.</span><span class="nx">anchor</span> <span class="o">||</span> <span class="nx">o</span><span class="p">.</span><span class="nx">button</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">yuibutton</span> <span class="o">=</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">getYUIButton</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">)))</span> <span class="p">{</span>
+			<span class="nx">o</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">yuibutton</span><span class="p">.</span><span class="nx">get</span> <span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">);</span>
+			<span class="nx">o</span><span class="p">.</span><span class="nx">classes</span> <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">yuibutton</span><span class="p">.</span><span class="nx">getAttribute</span> <span class="p">(</span><span class="s1">&#39;className&#39;</span><span class="p">);</span>
+		<span class="p">}</span>
+		<span class="nx">o</span><span class="p">.</span><span class="nx">trigger</span> <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">trigger</span> <span class="o">||</span> <span class="nx">o</span><span class="p">.</span><span class="nx">anchor</span> <span class="o">||</span> <span class="nx">o</span><span class="p">.</span><span class="nx">yuibutton</span> <span class="o">||</span> <span class="nx">o</span><span class="p">.</span><span class="nx">input</span> <span class="o">||</span> <span class="nx">o</span><span class="p">.</span><span class="nx">select</span> <span class="o">||</span> <span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="o">;</span> <span class="c">/* priority order */</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">trigger</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">o</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="nx">o</span><span class="p">.</span><span class="nx">trigger</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">);</span>
+			<span class="nx">o</span><span class="p">.</span><span class="nx">classes</span> <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">classes</span> <span class="o">||</span> <span class="nx">o</span><span class="p">.</span><span class="nx">trigger</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s1">&#39;className&#39;</span><span class="p">);</span>
+		<span class="p">}</span>
+	  <span class="p">}</span>
+	  <span class="k">return</span> <span class="nx">o</span><span class="o">;</span>
+	<span class="p">}</span>
+	<span class="c">/** </span>
+<span class="c">	 * Parse an string and return the list of hooks</span>
+<span class="c">	 * @method _parseHooks</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">     * @param {String} str The classname of a target DOM element.</span>
+<span class="c">     * @return {Array} A collection of hooks.</span>
+<span class="c">     */</span>
+	<span class="kd">function</span> <span class="nx">_parseHooks</span> <span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+	  <span class="kd">var</span> <span class="nx">m</span><span class="o">,</span> <span class="nx">hooks</span> <span class="o">=</span> <span class="p">[];</span>
+	  <span class="k">while</span> <span class="p">((</span><span class="nx">m</span> <span class="o">=</span> <span class="nx">_reHooks</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">str</span><span class="p">)))</span> <span class="p">{</span>
+	  	<span class="nx">hooks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">m</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">toLowerCase</span><span class="p">());</span>
+		<span class="nx">str</span> <span class="o">=</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="nx">m</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+	  <span class="p">}</span>
+	  <span class="k">return</span> <span class="nx">hooks</span><span class="o">;</span>
+	<span class="p">}</span>
+	<span class="c">/** </span>
+<span class="c">	 * Create a new instance of a region.</span>
+<span class="c">	 * @method _initRegion</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">     * @param {String} guid Global Unique ID for a region instance.</span>
+<span class="c">     * @param {Object} mod An object that represents an new instance.</span>
+<span class="c">     * @return void</span>
+<span class="c">     */</span>
+	<span class="kd">function</span> <span class="nx">_initRegion</span> <span class="p">(</span><span class="nx">guid</span><span class="o">,</span> <span class="nx">mod</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">mod</span> <span class="o">=</span> <span class="nx">mod</span> <span class="o">||</span> <span class="p">{};</span>
+		<span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span> <span class="o">=</span> <span class="nx">guid</span><span class="o">;</span>
+		<span class="nx">mod</span><span class="p">.</span><span class="nx">lazyload</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">mod</span><span class="p">.</span><span class="nx">ondomready</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">mod</span><span class="p">.</span><span class="nx">ondomready</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+			<span class="c">/* a region can wait until onDOMReady */</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">on</span> <span class="p">(</span><span class="s1">&#39;domready&#39;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] init region on DOMReady: &#39;</span><span class="o">+</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="p">);</span>
+				<span class="nx">obj</span><span class="p">.</span><span class="nx">initRegion</span><span class="p">(</span><span class="nx">guid</span><span class="o">,</span> <span class="nx">mod</span><span class="p">);</span>
+			<span class="p">});</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">_bd</span><span class="p">)</span> <span class="p">{</span>
+			  <span class="nx">mod</span><span class="p">.</span><span class="nx">parentRegion</span> <span class="o">=</span> <span class="nx">mod</span><span class="p">.</span><span class="nx">parentRegion</span> <span class="o">||</span> <span class="nx">_bd</span><span class="o">;</span>
+			  <span class="nx">mod</span><span class="p">.</span><span class="nx">parent</span> <span class="o">=</span> <span class="nx">mod</span><span class="p">.</span><span class="nx">parent</span> <span class="o">||</span> <span class="nx">_bd</span><span class="p">.</span><span class="nx">guid</span><span class="o">;</span>
+			<span class="p">}</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span> <span class="o">&amp;&amp;</span> <span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">_MODS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span><span class="p">))</span> <span class="p">{</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">_LOADERS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span><span class="p">))</span> <span class="p">{</span>
+					<span class="c">/* the class already exist */</span>
+					<span class="nx">_LOADERS</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span><span class="p">].</span><span class="nx">subscribe</span> <span class="p">(</span><span class="nx">mod</span><span class="p">);</span>
+				<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+					<span class="nx">_LOADERS</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">_modLoader</span> <span class="p">(</span><span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span><span class="p">);</span>
+					<span class="nx">_LOADERS</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span><span class="p">].</span><span class="nx">subscribe</span> <span class="p">(</span><span class="nx">mod</span><span class="p">);</span>
+					<span class="c">/* loading the class definition */</span>
+					<span class="k">if</span> <span class="p">(</span><span class="nx">mod</span><span class="p">.</span><span class="nx">region</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">_LOADERS</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span><span class="p">].</span><span class="nx">load</span><span class="p">(</span><span class="nx">mod</span><span class="p">.</span><span class="nx">region</span><span class="p">);</span>
+					<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+						<span class="c">/* it&#39;s an inline region, and there is not need to load anything... */</span>
+						<span class="nx">_LOADERS</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span><span class="p">].</span><span class="nx">set</span><span class="p">({});</span>
+					<span class="p">}</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="c">/** </span>
+<span class="c">	 * Inject a plugin into the global region represented by &quot;document.body&quot;.</span>
+<span class="c">	 * @method _initPlugin</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">     * @param {String} name Plugin name.</span>
+<span class="c">     * @return void</span>
+<span class="c">     */</span>
+	<span class="kd">function</span> <span class="nx">_initPlugin</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">_bd</span><span class="p">.</span><span class="nx">initPlugin</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+	<span class="p">}</span>
+	<span class="c">/** </span>
+<span class="c">	 * Inspecting child regions to determine which region owns the target element.</span>
+<span class="c">	 * @method _trickling</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">     * @param {Object} region A Region object reference.</span>
+<span class="c">	 * @param {Node|Object} target A Node instance that represents the target HTMLElement.</span>
+<span class="c">     * @return {Object} A Region object reference.</span>
+<span class="c">     */</span>
+	<span class="kd">function</span> <span class="nx">_trickling</span><span class="p">(</span><span class="nx">region</span><span class="o">,</span> <span class="nx">target</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">c</span><span class="o">,</span> <span class="nx">el</span> <span class="o">=</span> <span class="nx">target</span><span class="o">;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">target</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nb">Object</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">region</span><span class="p">.</span><span class="nx">childs</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">v</span><span class="o">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+				<span class="c">/* the childs with the lazyload are not ready yet to receive a message */</span>
+				<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">v</span><span class="p">.</span><span class="nx">lazyload</span> <span class="o">&amp;&amp;</span> <span class="p">((</span><span class="nx">el</span> <span class="o">===</span> <span class="nx">v</span><span class="p">.</span><span class="nx">node</span><span class="p">)</span> <span class="o">||</span> <span class="nx">v</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="o">+</span><span class="nx">v</span><span class="p">.</span><span class="nx">guid</span><span class="o">+</span><span class="s1">&#39; *&#39;</span><span class="p">)))</span> <span class="p">{</span>
+					<span class="c">/* comparing the event target with the region container or testing if it&#39;s a child element */</span>	
+					<span class="k">return</span> <span class="nx">_trickling</span> <span class="p">(</span><span class="nx">v</span><span class="o">,</span> <span class="nx">target</span><span class="p">);</span>
+				<span class="p">}</span>
+			<span class="p">}</span><span class="o">,</span> <span class="nx">obj</span><span class="o">,</span> <span class="kc">false</span><span class="p">);</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="nx">region</span><span class="o">;</span> <span class="c">// chain support</span>
+	<span class="p">}</span>
+	<span class="c">/** </span>
+<span class="c">	 * Parsing an url using strict of loose mode.</span>
+<span class="c">	 * TODO: modify to use strict mode with an static regex</span>
+<span class="c">	 * @method _parseUri</span>
+<span class="c">	 * @private</span>
+<span class="c">	 * @static</span>
+<span class="c">     * @param {String} str URL to be parsed.</span>
+<span class="c">	 * @param {Boolean} strictMode Whether or not to use strict mode to parse the url.</span>
+<span class="c">     * @return {Object} A object that represent an URL.</span>
+<span class="c">     */</span>
+	<span class="kd">function</span> <span class="nx">_parseUri</span> <span class="p">(</span><span class="nx">str</span><span class="o">,</span> <span class="nx">strictMode</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span>	<span class="nx">o</span> <span class="o">=</span> <span class="nx">_reURL</span><span class="o">,</span>
+			<span class="nx">m</span>   <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">parser</span><span class="p">[</span><span class="nx">strictMode</span><span class="o">?</span><span class="s2">&quot;strict&quot;</span><span class="o">:</span><span class="s2">&quot;loose&quot;</span><span class="p">].</span><span class="nx">exec</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span><span class="o">,</span>
+			<span class="nx">uri</span> <span class="o">=</span> <span class="p">{}</span><span class="o">,</span>
+			<span class="nx">i</span>   <span class="o">=</span> <span class="mi">14</span><span class="o">;</span>
+	
+		<span class="k">while</span> <span class="p">(</span><span class="nx">i</span><span class="o">--</span><span class="p">)</span> <span class="p">{</span> 
+			<span class="nx">uri</span><span class="p">[</span><span class="nx">o</span><span class="p">.</span><span class="nx">key</span><span class="p">[</span><span class="nx">i</span><span class="p">]]</span> <span class="o">=</span> <span class="nx">m</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">||</span> <span class="s2">&quot;&quot;</span><span class="o">;</span> 
+		<span class="p">}</span>
+		<span class="nx">uri</span><span class="p">[</span><span class="nx">o</span><span class="p">.</span><span class="nx">q</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{};</span>
+		<span class="nx">uri</span><span class="p">[</span><span class="nx">o</span><span class="p">.</span><span class="nx">key</span><span class="p">[</span><span class="mi">12</span><span class="p">]].</span><span class="nx">replace</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">q</span><span class="p">.</span><span class="nx">parser</span><span class="o">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$0</span><span class="o">,</span> <span class="nx">$1</span><span class="o">,</span> <span class="nx">$2</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">$1</span><span class="p">)</span> <span class="p">{</span> 
+				<span class="nx">uri</span><span class="p">[</span><span class="nx">o</span><span class="p">.</span><span class="nx">q</span><span class="p">.</span><span class="nx">name</span><span class="p">][</span><span class="nx">$1</span><span class="p">]</span> <span class="o">=</span> <span class="nx">$2</span><span class="o">;</span> 
+			<span class="p">}</span>
+		<span class="p">});</span>
+		<span class="k">return</span> <span class="nx">uri</span><span class="o">;</span>
+	<span class="p">}</span>
+	<span class="c">/** </span>
+<span class="c">	 * Creating an object with the shorthands references.</span>
+<span class="c">	 * @method _getShorthands</span>
+<span class="c">	 * @return {Object} A object with the default list of shorthands.</span>
+<span class="c">     */</span>
+	<span class="kd">function</span> <span class="nx">_getShorthands</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+		<span class="c">/* setting the default shorthands */</span>
+		<span class="kd">var</span> <span class="nx">Y</span> <span class="o">=</span> <span class="nx">YUI</span><span class="p">();</span>
+		<span class="k">return</span> <span class="nx">Y</span><span class="p">.</span><span class="nx">use</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">Y</span><span class="o">,</span> <span class="nx">r</span><span class="p">);</span>
+	<span class="p">}</span>
+	
+	<span class="c">/**</span>
+<span class="c">	 * Provides a prototype to control the loading process for an undefined RegionDefinition. A RegionLoader </span>
+<span class="c">	 * instance controls the loading of a RegionDefinition, and notify to the regions when its definition become available.</span>
+<span class="c">	 * @class RegionLoader3</span>
+<span class="c">	 * @constructor</span>
+<span class="c">	 * @param {String} ns RegionDefinition namespace</span>
+<span class="c">	 * @for YRegion3</span>
+<span class="c">	 * @return {Object} RegionLoader instance</span>
+<span class="c">	 */</span>
+	<span class="nx">_modLoader</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">ns</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">this</span><span class="p">.</span><span class="nx">ns</span> <span class="o">=</span> <span class="nx">ns</span><span class="o">;</span>
+	<span class="p">};</span>
+	<span class="nx">_modLoader</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="c">/** </span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * loading the Region Definition</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method load</span>
+<span class="c">		 * @param {String} uri URL to load a file on demand (js or css)</span>
+<span class="c">		 * @param {Object} callback Literal object (success, failure).</span>
+<span class="c">		 * @return {Object} Get Utility handler.</span>
+<span class="c">		 */</span>
+		<span class="nx">load</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">uri</span><span class="o">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">callback</span> <span class="o">=</span> <span class="nx">callback</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="c">// loading the definition for the region</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_debug</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">uri</span> <span class="o">+=</span> <span class="p">((</span><span class="nx">uri</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;?&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;?&#39;</span><span class="o">:</span><span class="s1">&#39;&amp;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;rnd=&quot;</span> <span class="o">+</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">valueOf</span><span class="p">().</span><span class="nx">toString</span><span class="p">();</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">_Y</span><span class="p">.</span><span class="nx">io</span><span class="p">.</span><span class="nx">script</span><span class="p">(</span><span class="nx">uri</span><span class="o">,</span> <span class="nx">callback</span><span class="p">);</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/** </span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * setting the Region Definition, when a new region definition is included in the current page,</span>
+<span class="c">		 * these method will be executed to notify to everybody that a new region definition is ready.</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method set</span>
+<span class="c">		 * @param {Object} object with the region definition.</span>
+<span class="c">		 * @return void</span>
+<span class="c">		 */</span>
+		<span class="nx">set</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">mod</span><span class="p">)</span> <span class="p">{</span>
+			<span class="c">/* the new region definition should inherit from generic region */</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">(</span><span class="nx">mod</span><span class="o">,</span> <span class="nx">_regionAbstraction</span><span class="p">);</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">_mod</span> <span class="o">=</span> <span class="nx">mod</span><span class="o">;</span>
+			<span class="c">// finally, notifying everybody that the region definition is ready</span>
+		    <span class="k">this</span><span class="p">.</span><span class="nx">notify</span><span class="p">();</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/** </span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * creating a new instance, inheriting the region definition methods.</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method create</span>
+<span class="c">		 * @param {Object} mod Instance of the new region.</span>
+<span class="c">		 * @return void</span>
+<span class="c">		 */</span>
+		<span class="nx">create</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">mod</span><span class="p">)</span> <span class="p">{</span>
+			<span class="c">/* mod is an instance of the this._mod */</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">(</span><span class="nx">mod</span><span class="o">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">_mod</span><span class="p">);</span>
+			<span class="c">// storing the region instance reference</span>
+			<span class="nx">_MODS</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mod</span><span class="o">;</span>
+			<span class="c">/* initializing the region instance */</span>
+			<span class="nx">mod</span><span class="p">.</span><span class="nx">init</span><span class="p">();</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/** </span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * subscribing a new instance to this region definition, when the class become available, the </span>
+<span class="c">		 * subscriber will get a notification.</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method subscribe</span>
+<span class="c">		 * @param {Object} mod Instance of the new region.</span>
+<span class="c">		 * @return void</span>
+<span class="c">		 */</span>
+		<span class="nx">subscribe</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">mod</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">_instances</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">_instances</span> <span class="o">||</span> <span class="p">[];</span>
+			<span class="c">/* waiting until the class become available along with the requiredments */</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">_instances</span><span class="p">.</span><span class="nx">push</span> <span class="p">(</span><span class="nx">mod</span><span class="p">);</span>
+			<span class="c">// if the class is already available, just send the notification</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_mod</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">notify</span> <span class="p">();</span>
+			<span class="p">}</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/** </span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * notifying to all the subscribers that the region definition is ready, this process will </span>
+<span class="c">		 * garranty that this region instances will be instantiated after the class become available.</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method notify</span>
+<span class="c">		 * @return void</span>
+<span class="c">		 */</span>
+		<span class="nx">notify</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">l</span><span class="o">;</span>
+			<span class="c">/* firing each listener */</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_instances</span><span class="p">))</span> <span class="p">{</span>
+			  <span class="k">while</span> <span class="p">((</span><span class="nx">l</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">_instances</span><span class="p">.</span><span class="nx">pop</span><span class="p">()))</span> <span class="p">{</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">create</span> <span class="p">(</span><span class="nx">l</span><span class="p">);</span>
+			  <span class="p">}</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">};</span>
+	
+	<span class="c">/**</span>
+<span class="c">	 * Provides a set of generic methods that each region instance inherits automatically.</span>
+<span class="c">	 * @class RegionDefinition3</span>
+<span class="c">	 * @static</span>
+<span class="c">	 * @for YRegion3</span>
+<span class="c">	 */</span>
+	<span class="nx">_regionAbstraction</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="nx">init</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+		    <span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] creating: &#39;</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="p">);</span>
+			<span class="kd">var</span> <span class="nx">f</span><span class="o">,</span> <span class="nx">i</span><span class="o">,</span> <span class="nx">files</span> <span class="o">=</span> <span class="p">[]</span><span class="o">,</span> <span class="nx">r</span><span class="o">,</span> <span class="nx">l</span><span class="o">,</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+			<span class="c">/* filtering get and post arguments for the server side */</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">getargs</span> <span class="o">=</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getargs</span><span class="o">?</span><span class="k">this</span><span class="p">.</span><span class="nx">getargs</span><span class="o">:</span><span class="p">{});</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">postargs</span> <span class="o">=</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">postargs</span><span class="o">?</span><span class="k">this</span><span class="p">.</span><span class="nx">postargs</span><span class="o">:</span><span class="p">{});</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] decoding server (get and post) arguments: &#39;</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="k">this</span><span class="p">);</span>
+		    <span class="c">// starting the loading routine for the dependencies...</span>
+			<span class="c">// loading the requiredments</span>
+		    <span class="k">this</span><span class="p">.</span><span class="nx">require</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">require</span> <span class="o">||</span> <span class="p">[];</span>
+			<span class="c">// getting the official list to load</span>
+			<span class="nx">r</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">require</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
+			<span class="c">// checking cache for the includes</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">dependencies</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">dependencies</span> <span class="o">||</span> <span class="p">[];</span>
+			<span class="c">// cheching the uri in the hashtable</span>
+			<span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="k">this</span><span class="p">.</span><span class="nx">dependencies</span><span class="p">.</span><span class="nx">length</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">f</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">dependencies</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+				<span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">f</span> <span class="o">===</span> <span class="s1">&#39;string&#39;</span><span class="p">)</span> <span class="p">{</span>
+					<span class="nx">f</span> <span class="o">=</span> <span class="p">{</span><span class="nx">fullpath</span><span class="o">:</span> <span class="nx">f</span><span class="p">};</span>
+					<span class="k">this</span><span class="p">.</span><span class="nx">dependencies</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">f</span><span class="o">;</span>
+				<span class="p">}</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">fullpath</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="o">!</span><span class="nx">_cached</span><span class="p">(</span><span class="nx">f</span><span class="p">)))</span> <span class="p">{</span>
+					<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_debug</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">f</span><span class="p">.</span><span class="nx">fullpath</span> <span class="o">+=</span> <span class="p">((</span><span class="nx">f</span><span class="p">.</span><span class="nx">fullpath</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;?&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;?&#39;</span><span class="o">:</span><span class="s1">&#39;&amp;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;rnd=&quot;</span> <span class="o">+</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">valueOf</span><span class="p">().</span><span class="nx">toString</span><span class="p">();</span>
+						<span class="p">}</span>
+						<span class="nx">files</span><span class="p">.</span><span class="nx">push</span> <span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">fullpath</span><span class="p">);</span>
+					<span class="p">}</span>
+				<span class="p">}</span>
+<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] loading the requirements: &#39;</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">r</span><span class="p">);</span>
+			<span class="nx">f</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] the DOM element for the region is ready: &#39;</span><span class="o">+</span><span class="nx">that</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">that</span><span class="p">);</span>
+				<span class="c">/* if the region have a wrapper, we can assume that we need to create the container within that wrapper */</span>
+					<span class="k">if</span> <span class="p">(</span><span class="nx">that</span><span class="p">.</span><span class="nx">wrapper</span><span class="p">)</span> <span class="p">{</span>
+<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] creating the container for the area: &#39;</span><span class="o">+</span><span class="nx">that</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">that</span><span class="p">);</span>
+					<span class="nx">that</span><span class="p">.</span><span class="nx">addToBody</span><span class="p">({</span>
+						<span class="nx">attributes</span><span class="o">:</span> <span class="p">{</span>
+							<span class="nx">id</span><span class="o">:</span> <span class="nx">that</span><span class="p">.</span><span class="nx">guid</span>
+						<span class="p">}</span>
+					<span class="p">}</span><span class="o">,</span> <span class="k">this</span><span class="p">);</span>
+				<span class="p">}</span>
+				<span class="c">/* if the region is an AJAX region, it shoult be loaded dynamically using YUI Connection Manager */</span>
+					<span class="k">if</span> <span class="p">(</span><span class="nx">that</span><span class="p">.</span><span class="nx">ajax</span><span class="p">)</span> <span class="p">{</span>
+<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] init an AJAX region&#39;</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="p">);</span>
+					<span class="c">/* we shoudl use ajax to load the content of the region */</span>
+					<span class="c">//_Y.aggregate(that, _getShorthands(that.require));</span>
+					<span class="nx">that</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="s1">&#39;render&#39;</span><span class="o">,</span> <span class="p">{}</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">that</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;innerHTML&#39;</span><span class="o">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">response</span><span class="p">);</span>
+						<span class="nx">that</span><span class="p">.</span><span class="nx">ready</span><span class="p">();</span>
+					<span class="p">});</span>
+				<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+					<span class="nx">that</span><span class="p">.</span><span class="nx">ready</span><span class="p">();</span>
+				<span class="p">}</span>
+			<span class="p">};</span>
+			
+			<span class="c">// finally, executing the ready method</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">include</span><span class="p">(</span><span class="nx">r</span><span class="o">,</span> <span class="nx">files</span><span class="o">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+				<span class="nx">that</span><span class="p">.</span><span class="nx">available</span> <span class="p">(</span><span class="nx">f</span><span class="p">);</span>
+			<span class="p">});</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">available</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+			<span class="c">/* inserting the default requirements (Y.use) */</span>
+			<span class="nx">that</span><span class="p">.</span><span class="nx">require</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s2">&quot;event&quot;</span><span class="o">,</span> <span class="s2">&quot;node&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+				<span class="c">/* waiting until the body element become available, probably we should wait until domready instead  */</span>
+				<span class="nx">that</span><span class="p">.</span><span class="nx">waiting</span><span class="p">(</span><span class="nx">f</span><span class="p">);</span>
+			<span class="p">});</span>
+			<span class="c">/* creating the custom loader object. </span>
+<span class="c">			 * - In theory this initialization process doesn&#39;t need to load any file, because</span>
+<span class="c">			 *   the files were already loaded, so the intension is to create Y obj with the custom requirements, </span>
+<span class="c">			 *   instead of using the whole set of available components. so _Y &lt;&gt; Y </span>
+<span class="c">			 */</span>
+			<span class="nx">that</span><span class="p">.</span><span class="nx">Y</span> <span class="o">=</span> <span class="nx">YUI</span><span class="p">();</span>
+			<span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="nx">that</span><span class="p">.</span><span class="nx">require</span><span class="p">);</span>
+			<span class="nx">that</span><span class="p">.</span><span class="nx">Y</span><span class="p">.</span><span class="nx">use</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">that</span><span class="p">.</span><span class="nx">Y</span><span class="o">,</span> <span class="nx">that</span><span class="p">.</span><span class="nx">require</span><span class="p">);</span>
+			<span class="k">return</span> <span class="nx">that</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">waiting</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">node</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span> <span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="p">);</span>
+			<span class="c">/* if the wrapper exists, we should wait until the wrapper become available */</span>
+			<span class="kd">var</span> <span class="nx">n</span> <span class="o">=</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">wrapper</span><span class="o">?</span><span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">wrapper</span><span class="p">)</span><span class="o">:</span><span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">);</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] the dependencies are ready, now we need to wait for the DOM element: &#39;</span><span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">n</span><span class="p">);</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">n</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;available&#39;</span><span class="o">,</span> <span class="nx">f</span><span class="p">);</span>
+			<span class="p">}</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">ready</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">c</span><span class="o">,</span> <span class="nx">i</span><span class="o">,</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="o">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="p">);</span>
+			<span class="c">/* expending with the shorthands */</span>
+			<span class="c">//_Y.aggregate(this, _getShorthands(this.require));</span>
+			<span class="c">/* checking for the plugins: installing them if needed */</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">install</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">actions</span><span class="p">);</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">plugins</span><span class="p">))</span> <span class="p">{</span>
+				<span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="k">this</span><span class="p">.</span><span class="nx">plugins</span><span class="p">.</span><span class="nx">length</span><span class="o">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+				  <span class="k">this</span><span class="p">.</span><span class="nx">initPlugin</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">plugins</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+			<span class="c">/* if the region have a parent, it should notify that it&#39;s ready */</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">parentRegion</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">parentRegion</span><span class="p">.</span><span class="nx">setChild</span> <span class="p">(</span><span class="k">this</span><span class="p">);</span>
+			<span class="p">}</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">addClass</span> <span class="p">(</span><span class="nx">_region_class</span><span class="p">);</span>
+			<span class="c">/* initializing the child regions */</span>
+			
+			<span class="nx">_Y</span><span class="p">.</span><span class="nb">Object</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">that</span><span class="p">.</span><span class="nx">childs</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">v</span><span class="o">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+				<span class="c">/* the childs with the lazyload should be loaded manually */</span>
+				<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">v</span><span class="p">.</span><span class="nx">lazyload</span><span class="p">)</span> <span class="p">{</span>
+					<span class="nx">that</span><span class="p">.</span><span class="nx">initChild</span><span class="p">(</span><span class="nx">i</span><span class="o">,</span> <span class="nx">v</span><span class="p">);</span>
+				<span class="p">}</span>
+			<span class="p">}</span><span class="o">,</span> <span class="nx">that</span><span class="o">,</span> <span class="kc">false</span><span class="p">);</span>
+			
+			<span class="k">this</span><span class="p">.</span><span class="nx">fire</span><span class="p">(</span><span class="s1">&#39;region:ready&#39;</span><span class="p">);</span>
+			
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;contentready&#39;</span><span class="o">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] region is ready to be expanded: &#39;</span><span class="o">+</span> <span class="nx">that</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="p">);</span>
+				<span class="nx">that</span><span class="p">.</span><span class="nx">fire</span><span class="p">(</span><span class="s1">&#39;region:contentready&#39;</span><span class="p">);</span>
+				<span class="c">/* also, yregion support integration with unit test */</span>
+				<span class="nx">that</span><span class="p">.</span><span class="nx">fire</span><span class="p">(</span><span class="s1">&#39;test:ready&#39;</span><span class="p">);</span>
+			<span class="p">}</span><span class="o">,</span> <span class="s1">&#39;#&#39;</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="k">this</span><span class="p">);</span>
+			
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">install</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">plugin</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nb">Object</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">plugin</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">v</span><span class="o">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">that</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">i</span><span class="o">,</span> <span class="nx">v</span><span class="p">);</span>
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] adding a new message: &#39;</span><span class="o">+</span> <span class="nx">that</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">i</span><span class="p">);</span>
+			<span class="p">}</span><span class="o">,</span> <span class="nx">that</span><span class="o">,</span> <span class="kc">false</span><span class="p">);</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">initPlugin</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">_PLUGINS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">name</span><span class="p">))</span> <span class="p">{</span>
+			  <span class="k">this</span><span class="p">.</span><span class="nx">install</span><span class="p">(</span><span class="nx">_PLUGINS</span><span class="p">[</span><span class="nx">name</span><span class="p">]);</span>
+		    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			  <span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] error adopting a unknown plugin: &#39;</span><span class="o">+</span><span class="nx">name</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="p">);</span>
+		    <span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span> 
+		<span class="nx">use</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">a</span><span class="o">=</span><span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="o">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">,</span>
+				<span class="nx">callback</span> <span class="o">=</span> <span class="nx">a</span><span class="p">.</span><span class="nx">pop</span> <span class="p">();</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+			  <span class="k">if</span> <span class="p">(</span><span class="nx">a</span> <span class="o">&amp;&amp;</span> <span class="nx">a</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+				  <span class="c">// using the YUI loader utility to load the requirements...</span>
+				  <span class="nx">_loaderQueue</span><span class="p">.</span><span class="nx">push</span> <span class="p">({</span>
+					  <span class="nx">require</span><span class="o">:</span> <span class="nx">a</span><span class="o">,</span> 
+					  <span class="nx">callback</span><span class="o">:</span> <span class="nx">callback</span><span class="o">,</span>
+					  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;js&#39;</span> <span class="c">/*TODO: this._loader.type*/</span>
+				  <span class="p">});</span>
+				  <span class="k">if</span> <span class="p">(</span><span class="nx">_loaderQueue</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+					  <span class="nx">_loaderDispatch</span><span class="p">();</span>
+				  <span class="p">}</span>
+			  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+				  <span class="nx">callback</span><span class="p">.</span><span class="nx">call</span> <span class="p">();</span>
+			  <span class="p">}</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">include</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">mods</span><span class="o">,</span> <span class="nx">files</span><span class="o">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">f</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">files</span><span class="o">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">,</span>
+				<span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+			  <span class="nx">mods</span><span class="p">.</span><span class="nx">push</span> <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">M</span><span class="p">)</span> <span class="p">{</span>
+				<span class="c">// loading the inclusions</span>
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] the requirements are ready, now we need to load the dependencies: &#39;</span><span class="o">+</span><span class="nx">that</span><span class="p">.</span><span class="nx">guid</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">f</span> <span class="p">);</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span> <span class="p">{</span>
+					<span class="nx">_Y</span><span class="p">.</span><span class="nx">Get</span><span class="p">.</span><span class="nx">script</span><span class="p">(</span><span class="nx">f</span><span class="o">,</span> <span class="p">{</span> 
+					  <span class="nx">onSuccess</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">_cache</span><span class="p">(</span><span class="nx">files</span><span class="p">);</span>
+						<span class="c">// everything is ready...</span>
+						<span class="nx">callback</span><span class="p">.</span><span class="nx">apply</span> <span class="p">(</span><span class="nx">that</span><span class="o">,</span> <span class="p">[]);</span>
+					  <span class="p">}</span><span class="o">,</span>
+					  <span class="nx">onFailure</span><span class="o">:</span> <span class="p">{}</span><span class="o">,</span>
+					  <span class="nx">autopurge</span><span class="o">:</span> <span class="kc">true</span> <span class="c">//removes the script node immediately after executing;</span>
+					<span class="p">});</span>
+				<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+					<span class="c">// everything is ready...</span>
+					<span class="nx">callback</span><span class="p">.</span><span class="nx">apply</span> <span class="p">(</span><span class="nx">that</span><span class="o">,</span> <span class="p">[]);</span>
+				<span class="p">}</span> 
+			  <span class="p">});</span>
+			  <span class="k">this</span><span class="p">.</span><span class="nx">use</span><span class="p">.</span><span class="nx">apply</span> <span class="p">(</span><span class="nx">that</span><span class="o">,</span> <span class="nx">mods</span><span class="p">);</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">setContent</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">xpath</span><span class="o">,</span> <span class="nx">bd</span><span class="p">)</span> <span class="p">{</span>
+			<span class="c">/* by default we should use the node element for the region */</span>
+			<span class="nx">bd</span> <span class="o">=</span> <span class="nx">bd</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="o">;</span>
+			<span class="kd">var</span> <span class="nx">el</span> <span class="o">=</span>  <span class="nx">_Y</span><span class="p">.</span><span class="nx">Selector</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">xpath</span><span class="o">,</span> <span class="nx">_Y</span><span class="p">.</span><span class="nx">Node</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">bd</span><span class="p">))</span><span class="o">,</span> <span class="kc">true</span><span class="p">);</span> 
+			<span class="k">if</span> <span class="p">(</span><span class="nx">el</span><span class="p">)</span> <span class="p">{</span>
+				<span class="c">// purge the child elements and the events attached...</span>
+				<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">el</span><span class="p">.</span><span class="nx">childNodes</span><span class="p">.</span><span class="nx">length</span><span class="o">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+				  <span class="nx">_Y</span><span class="p">.</span><span class="nx">Event</span><span class="p">.</span><span class="nx">purgeElement</span> <span class="p">(</span> <span class="nx">el</span><span class="p">.</span><span class="nx">childNodes</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">,</span> <span class="kc">true</span> <span class="p">);</span>
+				<span class="p">}</span>
+				<span class="nx">el</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="nx">bd</span><span class="o">;</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">bubbling</span> <span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="o">,</span> <span class="s1">&#39;contentchange&#39;</span><span class="o">,</span> <span class="p">{</span>
+					<span class="nx">node</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">node</span>
+				<span class="p">});</span>
+			<span class="p">}</span>
+			<span class="k">else</span> <span class="p">{</span> 
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] Invalid Selector: &#39;</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">xpath</span><span class="p">);</span> 
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">setBody</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">bd</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">el</span> <span class="o">=</span> <span class="nx">_Y</span><span class="p">.</span><span class="nx">Node</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">);</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">el</span><span class="p">)</span> <span class="p">{</span>
+				<span class="c">// purge the child elements and the events attached...</span>
+				<span class="k">for</span> <span class="p">(</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="nx">el</span><span class="p">.</span><span class="nx">childNodes</span><span class="p">.</span><span class="nx">length</span><span class="o">;</span><span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+				  <span class="nx">_Y</span><span class="p">.</span><span class="nx">Event</span><span class="p">.</span><span class="nx">purgeElement</span> <span class="p">(</span> <span class="nx">el</span><span class="p">.</span><span class="nx">childNodes</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">,</span> <span class="kc">true</span> <span class="p">);</span>
+				<span class="p">}</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;innerHTML&#39;</span><span class="o">,</span> <span class="nx">bd</span><span class="p">);</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">bubbling</span> <span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="o">,</span> <span class="s1">&#39;contentchange&#39;</span><span class="o">,</span> <span class="p">{</span>
+					<span class="nx">node</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">node</span>
+				<span class="p">});</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">addToBody</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">bd</span><span class="o">,</span> <span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">o</span><span class="o">,</span> <span class="nx">a</span><span class="o">;</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">bd</span><span class="p">))</span> <span class="p">{</span>
+				<span class="nx">bd</span> <span class="o">=</span> <span class="p">{</span><span class="nx">innerHTML</span><span class="o">:</span> <span class="nx">bd</span><span class="p">};</span>
+			<span class="p">}</span>
+			<span class="nx">n</span> <span class="o">=</span> <span class="nx">n</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="o">;</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">(</span><span class="nx">bd</span><span class="o">,</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;div&#39;</span><span class="o">,</span> <span class="nx">attributes</span><span class="o">:</span> <span class="p">{}</span><span class="o">,</span> <span class="nx">innerHTML</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">bd</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">o</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">bd</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span>
+				<span class="c">/* adding attributes */</span>
+				<span class="k">for</span> <span class="p">(</span><span class="nx">a</span> <span class="k">in</span> <span class="nx">bd</span><span class="p">.</span><span class="nx">attributes</span><span class="p">)</span> <span class="p">{</span>
+					<span class="k">if</span> <span class="p">(</span><span class="nx">bd</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">a</span><span class="p">))</span> <span class="p">{</span>
+						<span class="nx">o</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="nx">a</span><span class="o">,</span> <span class="nx">bd</span><span class="p">.</span><span class="nx">attributes</span><span class="p">[</span><span class="nx">a</span><span class="p">]);</span>
+					<span class="p">}</span>
+				<span class="p">}</span>
+				<span class="nx">o</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="nx">bd</span><span class="p">.</span><span class="nx">innerHTML</span><span class="o">;</span>
+				<span class="nx">n</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">o</span><span class="p">);</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">bubbling</span> <span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="o">,</span> <span class="s1">&#39;contentchange&#39;</span><span class="o">,</span> <span class="p">{</span>
+					<span class="nx">node</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">node</span>
+				<span class="p">});</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">initChild</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">guid</span><span class="o">,</span> <span class="nx">mod</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">mod</span> <span class="o">=</span> <span class="nx">mod</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="nx">mod</span><span class="p">.</span><span class="nx">parentRegion</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+			<span class="nx">mod</span><span class="p">.</span><span class="nx">parent</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="o">;</span>
+			<span class="nx">obj</span><span class="p">.</span><span class="nx">initRegion</span> <span class="p">(</span><span class="nx">guid</span><span class="o">,</span> <span class="nx">mod</span><span class="p">);</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining support */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">wakeChild</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">guid</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">guid</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">guid</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">[</span><span class="nx">guid</span><span class="p">].</span><span class="nx">lazyload</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">initChild</span> <span class="p">(</span><span class="nx">guid</span><span class="o">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">[</span><span class="nx">guid</span><span class="p">]);</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining support */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/**</span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * setting a new child for the current region.</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method setChild</span>
+<span class="c">		 * @param {Object} mod reference to a certain region.</span>
+<span class="c">		 * @return {Object}</span>
+<span class="c">		 */</span>
+		<span class="nx">setChild</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">mod</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">childs</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">childs</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">mod</span> <span class="o">&amp;&amp;</span> <span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span><span class="p">]</span> <span class="o">=</span> <span class="nx">mod</span><span class="o">;</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining support */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/**</span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * getting a child region based on the GUID.</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method getChild</span>
+<span class="c">		 * @param {String} guid for a child region.</span>
+<span class="c">		 * @return {Object}</span>
+<span class="c">		 */</span>
+		<span class="nx">getChild</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">guid</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="p">((</span><span class="k">this</span><span class="p">.</span><span class="nx">childs</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">guid</span><span class="p">))</span><span class="o">?</span><span class="k">this</span><span class="p">.</span><span class="nx">child</span><span class="p">[</span><span class="nx">guid</span><span class="p">]</span><span class="o">:</span><span class="kc">null</span><span class="p">);</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/**</span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * getting a node element based on the CSS selector.</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method get</span>
+<span class="c">		 * @param {String} xpath for the desired element.</span>
+<span class="c">		 * @param {Object} node only if you want to be more specific, using this node as the root element for the search.</span>
+<span class="c">		 * @return {Object}</span>
+<span class="c">		 */</span>
+		<span class="nx">get</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">xpath</span><span class="o">,</span> <span class="nx">node</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">node</span> <span class="o">=</span> <span class="nx">node</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="o">;</span>
+			<span class="kd">var</span> <span class="nx">el</span> <span class="o">=</span> <span class="nx">_Y</span><span class="p">.</span><span class="nx">Selector</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="nx">xpath</span><span class="o">,</span> <span class="nx">_Y</span><span class="p">.</span><span class="nx">Node</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">(</span><span class="nx">node</span><span class="p">)</span><span class="o">,</span> <span class="kc">true</span><span class="p">);</span> 
+			<span class="k">return</span> <span class="p">(</span><span class="nx">el</span><span class="o">?</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">el</span><span class="p">)</span><span class="o">:</span><span class="kc">null</span><span class="p">);</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/**</span>
+<span class="c">		 * Return the visualization properties for the current region</span>
+<span class="c">		 * </span>
+<span class="c">		 * The viewport obj looks like this: </span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * {x:10, y:10, width: 10, height: 10, ... }</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 *</span>
+<span class="c">		 * @method getViewport</span>
+<span class="c">		 * @return {object} the literal object with the par {x:10, y:10, width: 10, height: 10, .... }</span>
+<span class="c">		 */</span>
+		<span class="nx">getViewport</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">el</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="o">,</span>
+				<span class="nx">r</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">Dom</span><span class="p">.</span><span class="nx">getRegion</span> <span class="p">(</span><span class="nx">el</span><span class="p">)</span> <span class="o">||</span> <span class="kc">null</span><span class="o">;</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">r</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">right</span> <span class="o">-</span> <span class="nx">r</span><span class="p">.</span><span class="nx">left</span><span class="o">;</span>
+				<span class="nx">r</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">bottom</span> <span class="o">-</span> <span class="nx">r</span><span class="p">.</span><span class="nx">top</span><span class="o">;</span>
+				<span class="nx">r</span><span class="p">.</span><span class="nx">scrollWidth</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">el</span><span class="p">.</span><span class="nx">scrollWidth</span><span class="o">,</span><span class="mi">10</span><span class="p">);</span>
+				<span class="nx">r</span><span class="p">.</span><span class="nx">scrollHeight</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">el</span><span class="p">.</span><span class="nx">scrollHeight</span><span class="o">,</span><span class="mi">10</span><span class="p">);</span>
+				<span class="nx">r</span><span class="p">.</span><span class="nx">position</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">Dom</span><span class="p">.</span><span class="nx">getStyle</span> <span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="o">;</span>
+				<span class="nx">r</span><span class="p">.</span><span class="nx">overflow</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">Dom</span><span class="p">.</span><span class="nx">getStyle</span> <span class="p">(</span><span class="s1">&#39;overflow&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="o">;</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">r</span><span class="o">;</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/**</span>
+<span class="c">		 * Set new dimention properties for the current region</span>
+<span class="c">		 *</span>
+<span class="c">		 * The viewport o configuration looks like this: </span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * {width: 10, height: 10, ... }</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * </span>
+<span class="c">		 * @method setViewport</span>
+<span class="c">		 * @param {Object} o literal object with the new configuration for the viewport</span>
+<span class="c">		 * @return {object} region reference to support chaining</span>
+<span class="c">		 */</span>
+		<span class="nx">setViewport</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">f</span> <span class="o">=</span> <span class="nx">_Y</span><span class="p">.</span><span class="nx">Dom</span><span class="p">.</span><span class="nx">setStyle</span><span class="o">,</span> <span class="nx">s</span><span class="o">;</span>
+			<span class="nx">o</span> <span class="o">=</span> <span class="nx">o</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="k">for</span> <span class="p">(</span><span class="nx">s</span> <span class="k">in</span> <span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">s</span><span class="p">))</span> <span class="p">{</span>
+					<span class="nx">f</span> <span class="p">(</span><span class="nx">s</span><span class="o">,</span> <span class="nx">o</span><span class="p">[</span><span class="nx">s</span><span class="p">]);</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining support */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">on</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">layer</span><span class="o">,</span> <span class="nx">listener</span><span class="o">,</span> <span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">_actions</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">_actions</span> <span class="o">||</span> <span class="k">new</span> <span class="k">this</span><span class="p">.</span><span class="nx">Y</span><span class="p">.</span><span class="nx">Event</span><span class="p">.</span><span class="nx">Target</span><span class="p">();</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">_actions</span><span class="p">.</span><span class="nx">publish</span><span class="p">(</span><span class="nx">layer</span><span class="p">);</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">_actions</span><span class="p">.</span><span class="nx">subscribe</span><span class="p">(</span><span class="nx">layer</span><span class="o">,</span> <span class="nx">listener</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="nx">args</span><span class="p">);</span>
+			<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">fire</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">layer</span><span class="o">,</span> <span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">o</span> <span class="o">=</span> <span class="nx">o</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_actions</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">_actions</span><span class="p">.</span><span class="nx">fire</span> <span class="p">(</span><span class="nx">layer</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">o</span><span class="p">.</span><span class="nx">flagged</span><span class="o">;</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">signature</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="p">(</span><span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">?</span><span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">:</span><span class="kc">null</span><span class="p">);</span>
+			<span class="c">/* checking the current status for this event, it&#39;s the event was already stopped, the response is null */</span>
+			<span class="k">return</span> <span class="p">((</span><span class="nx">a</span> <span class="o">&amp;&amp;</span> <span class="nx">a</span><span class="p">.</span><span class="nx">flagged</span><span class="p">)</span><span class="o">?</span><span class="kc">null</span><span class="o">:</span><span class="p">{</span><span class="nx">layer</span><span class="o">:</span> <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">,</span> <span class="nx">args</span><span class="o">:</span> <span class="nx">a</span><span class="o">,</span> <span class="nx">obj</span><span class="o">:</span> <span class="nx">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]});</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">inject</span><span class="o">:</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">inject</span><span class="o">,</span>
+		<span class="nx">notify</span><span class="o">:</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">notify</span><span class="o">,</span>
+		<span class="c">/**</span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * Process a list of messages, and bubble up those messages all the way up thru the parents</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method bubbling</span>
+<span class="c">		 * @param {String} layer the name of the event</span>
+<span class="c">		 * @param {Array|String} msgs The collection of messages.</span>
+<span class="c">		 * @param {Object} o Literal object to pass thru all the actions.</span>
+<span class="c">		 * @param {Boolean} flag if true only bubble up the event, not local confirmation.</span>
+<span class="c">		 * @return {Boolean} Whether or not a listener stop the execution or return false.</span>
+<span class="c">		 */</span>
+		<span class="nx">bubbling</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">layer</span><span class="o">,</span> <span class="nx">msgs</span><span class="o">,</span> <span class="nx">o</span><span class="o">,</span> <span class="nx">flag</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">o</span> <span class="o">=</span> <span class="nx">o</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="nx">o</span><span class="p">.</span><span class="nx">layer</span> <span class="o">=</span> <span class="nx">layer</span><span class="o">;</span>
+			<span class="nx">msgs</span> <span class="o">=</span> <span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">msgs</span><span class="p">)</span><span class="o">?</span><span class="nx">msgs</span><span class="o">:</span><span class="p">[</span><span class="nx">msgs</span><span class="p">]);</span>
+			<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">flag</span><span class="p">)</span> <span class="p">{</span> <span class="c">/* there is not need to send the messages for the current region */</span>
+			  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="o">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">msgs</span><span class="p">.</span><span class="nx">length</span><span class="o">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">layer</span> <span class="o">!=</span> <span class="s1">&#39;mouse&#39;</span><span class="p">)</span> <span class="p">{</span>
+				  <span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] new bubbling up message: &#39;</span><span class="o">+</span> <span class="nx">layer</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="nx">msgs</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="p">{</span>
+						<span class="nx">msg</span><span class="o">:</span> <span class="nx">o</span><span class="o">,</span>
+						<span class="nx">emisor</span><span class="o">:</span> <span class="k">this</span>
+					<span class="p">});</span>
+				<span class="p">}</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">fire</span><span class="p">(</span><span class="nx">layer</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="nx">msgs</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+			  <span class="p">}</span>
+			<span class="p">}</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">parentRegion</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">o</span><span class="p">.</span><span class="nx">flagged</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">parentRegion</span><span class="p">.</span><span class="nx">bubbling</span><span class="p">(</span><span class="nx">layer</span><span class="o">,</span> <span class="nx">msgs</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">o</span><span class="p">.</span><span class="nx">flagged</span><span class="o">;</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="c">/**</span>
+<span class="c">		 * &lt;p&gt;</span>
+<span class="c">		 * Process a message, and broadcasting the message to all the child regions</span>
+<span class="c">		 * &lt;/p&gt;</span>
+<span class="c">		 * @method broadcast</span>
+<span class="c">		 * @param {String} message the name of the message</span>
+<span class="c">		 * @param {Object} o Literal object to pass thru all the actions.</span>
+<span class="c">		 * @param {Boolean} flag if true only broadcast the event, not local confirmation.</span>
+<span class="c">		 * @return {Boolean} Whether or not a listener stop the execution or return false.</span>
+<span class="c">		 */</span>
+		<span class="nx">broadcast</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">layer</span><span class="o">,</span> <span class="nx">msg</span><span class="o">,</span> <span class="nx">o</span><span class="o">,</span> <span class="nx">flag</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">c</span><span class="o">;</span>
+			<span class="nx">o</span> <span class="o">=</span> <span class="nx">o</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="nx">o</span><span class="p">.</span><span class="nx">layer</span> <span class="o">=</span> <span class="nx">layer</span><span class="o">;</span>
+			<span class="nx">o</span><span class="p">.</span><span class="nx">flagged</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span> <span class="c">/* you can&#39;t stop a broadcast message */</span>
+			<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">flag</span><span class="p">)</span> <span class="p">{</span> <span class="c">/* there is not need to send the messages for the current region */</span>
+			  	<span class="k">this</span><span class="p">.</span><span class="nx">fire</span><span class="p">(</span><span class="nx">layer</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="nx">msg</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+			  	<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] new broadcast message: &#39;</span><span class="o">+</span><span class="nx">layer</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="nx">msg</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="p">{</span>
+					<span class="nx">msg</span><span class="o">:</span> <span class="nx">o</span><span class="o">,</span>
+					<span class="nx">emisor</span><span class="o">:</span> <span class="k">this</span>
+				<span class="p">});</span>
+			<span class="p">}</span>
+			<span class="c">/* initializing the child regions */</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">for</span> <span class="p">(</span><span class="nx">c</span> <span class="k">in</span> <span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">)</span> <span class="p">{</span>
+					<span class="c">/* the childs with the lazyload are not ready yet */</span>
+					<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">[</span><span class="nx">c</span><span class="p">].</span><span class="nx">lazyload</span><span class="p">))</span> <span class="p">{</span>
+						<span class="nx">o</span><span class="p">.</span><span class="nx">flagged</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span> <span class="c">/* you can&#39;t stop a broadcast message */</span>
+						<span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">[</span><span class="nx">c</span><span class="p">].</span><span class="nx">broadcast</span><span class="p">(</span><span class="nx">layer</span><span class="o">,</span> <span class="nx">msg</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+					<span class="p">}</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="nx">o</span><span class="p">.</span><span class="nx">flagged</span><span class="o">;</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">execute</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">command</span><span class="o">,</span> <span class="nx">args</span><span class="o">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+			<span class="kd">var</span> <span class="nx">query</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">,</span> <span class="nx">a</span><span class="o">,</span>
+				<span class="nx">uri</span> <span class="o">=</span> <span class="s1">&#39;/ajax/&#39;</span><span class="o">+</span><span class="k">this</span><span class="p">.</span><span class="nx">ns</span><span class="o">+</span><span class="s1">&#39;/ws&#39;</span><span class="o">,</span>
+				<span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="o">,</span> 
+				<span class="nx">postargs</span> <span class="o">=</span> <span class="p">{}</span><span class="o">,</span>
+				<span class="nx">getargs</span> <span class="o">=</span> <span class="p">{}</span><span class="o">,</span>
+				<span class="nx">c</span><span class="o">,</span> <span class="nx">h</span><span class="o">;</span>
+			<span class="c">/* builing the get arguments */</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">augmentObject</span><span class="p">(</span><span class="nx">getargs</span><span class="o">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">getargs</span><span class="o">,</span> <span class="kc">true</span><span class="p">);</span>
+			<span class="nx">getargs</span><span class="p">.</span><span class="nx">guid</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">guid</span><span class="o">;</span> <span class="c">/* adding the guid as a get argument */</span>
+			<span class="nx">getargs</span><span class="p">.</span><span class="nx">command</span> <span class="o">=</span> <span class="nx">command</span><span class="o">;</span> <span class="c">/* adding the command as a get argument */</span>
+			<span class="c">/* using a custom ws url */</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">ws</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">uri</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">ws</span><span class="o">;</span>
+			<span class="p">}</span>
+			<span class="nx">uri</span> <span class="o">=</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">augmentURI</span> <span class="p">(</span><span class="nx">uri</span><span class="o">,</span> <span class="nx">getargs</span><span class="p">);</span>
+			<span class="c">/* builing the post arguments */</span>
+			<span class="nx">args</span> <span class="o">=</span> <span class="nx">args</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">augmentObject</span><span class="p">(</span><span class="nx">postargs</span><span class="o">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">postargs</span><span class="o">,</span> <span class="kc">true</span><span class="p">);</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">augmentObject</span><span class="p">(</span><span class="nx">postargs</span><span class="o">,</span> <span class="nx">args</span><span class="o">,</span> <span class="kc">true</span><span class="p">);</span>
+			<span class="k">for</span> <span class="p">(</span><span class="nx">a</span> <span class="k">in</span> <span class="nx">postargs</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">postargs</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">a</span><span class="p">))</span> <span class="p">{</span>
+					<span class="nx">query</span> <span class="o">+=</span> <span class="p">(</span><span class="nx">query</span><span class="o">===</span><span class="s1">&#39;&#39;</span><span class="o">?</span><span class="s1">&#39;&#39;</span><span class="o">:</span><span class="s1">&#39;&amp;&#39;</span><span class="p">)</span><span class="o">+</span><span class="nx">a</span><span class="o">+</span><span class="s1">&#39;=&#39;</span><span class="o">+</span><span class="nx">postargs</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">YAHOO</span><span class="p">.</span><span class="nx">util</span><span class="p">.</span><span class="nx">Connect</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] executing: &#39;</span><span class="o">+</span> <span class="nx">uri</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="p">{</span>
+					<span class="nx">msg</span><span class="o">:</span> <span class="nx">o</span><span class="o">,</span>
+					<span class="nx">emisor</span><span class="o">:</span> <span class="k">this</span>
+				<span class="p">});</span>
+				<span class="c">/* defining the default behavior */</span>
+				<span class="nx">c</span> <span class="o">=</span> <span class="p">{</span>
+					<span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">that</span><span class="p">.</span><span class="nx">fire</span> <span class="p">(</span><span class="s1">&#39;region:executed&#39;</span><span class="o">,</span> <span class="p">{</span>
+							<span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;ajax&#39;</span><span class="o">,</span>
+							<span class="nx">o</span><span class="o">:</span> <span class="nx">o</span><span class="o">,</span>
+							<span class="nx">command</span><span class="o">:</span> <span class="nx">command</span><span class="o">,</span>
+							<span class="nx">args</span><span class="o">:</span> <span class="nx">args</span>
+						<span class="p">});</span>
+					<span class="p">}</span><span class="o">,</span>
+					<span class="nx">failure</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">that</span><span class="p">.</span><span class="nx">fire</span> <span class="p">(</span><span class="s1">&#39;region:error&#39;</span><span class="o">,</span> <span class="p">{</span>
+							<span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;ajax&#39;</span><span class="o">,</span>
+							<span class="nx">o</span><span class="o">:</span> <span class="nx">o</span><span class="o">,</span>
+							<span class="nx">command</span><span class="o">:</span> <span class="nx">command</span><span class="o">,</span>
+							<span class="nx">args</span><span class="o">:</span> <span class="nx">args</span>
+						<span class="p">});</span>
+					<span class="p">}</span>
+				<span class="p">};</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">callback</span><span class="p">))</span> <span class="p">{</span>
+					<span class="nx">c</span><span class="p">.</span><span class="nx">success</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">callback</span><span class="p">.</span><span class="nx">apply</span> <span class="p">(</span><span class="nx">that</span><span class="o">,</span> <span class="p">[</span><span class="nx">o</span><span class="p">]);</span>
+					<span class="p">};</span>
+				<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+					<span class="c">/* the callback is an object */</span>
+					<span class="nx">c</span> <span class="o">=</span> <span class="nx">callback</span><span class="o">;</span>
+				<span class="p">}</span>			
+				<span class="c">/* if there is not POST arguments, the request should be GET */</span>
+				<span class="nx">h</span> <span class="o">=</span> <span class="nx">YAHOO</span><span class="p">.</span><span class="nx">util</span><span class="p">.</span><span class="nx">Connect</span><span class="p">.</span><span class="nx">asyncRequest</span><span class="p">((</span><span class="nx">query</span><span class="o">===</span><span class="s1">&#39;&#39;</span><span class="o">?</span><span class="s1">&#39;GET&#39;</span><span class="o">:</span><span class="s1">&#39;POST&#39;</span><span class="p">)</span><span class="o">,</span> <span class="nx">uri</span><span class="o">,</span> <span class="nx">c</span><span class="o">,</span> <span class="nx">query</span><span class="p">);</span>
+				<span class="c">/* sending the executing message */</span>
+				<span class="nx">that</span><span class="p">.</span><span class="nx">bubbling</span> <span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="o">,</span> <span class="s1">&#39;loading&#39;</span><span class="o">,</span> <span class="p">{</span>
+					<span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;ajax&#39;</span><span class="o">,</span>
+					<span class="nx">node</span><span class="o">:</span> <span class="nx">that</span><span class="p">.</span><span class="nx">node</span><span class="o">,</span>
+					<span class="nx">handle</span><span class="o">:</span> <span class="nx">h</span><span class="o">,</span>
+					<span class="nx">command</span><span class="o">:</span> <span class="nx">command</span><span class="o">,</span>
+					<span class="nx">args</span><span class="o">:</span> <span class="nx">args</span>
+				<span class="p">});</span>
+				<span class="c">/* returning the transaction ID */</span>
+				<span class="k">return</span> <span class="nx">h</span><span class="o">;</span>
+			<span class="p">}</span>
+			<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+		<span class="p">}</span><span class="o">,</span>
+		<span class="nx">destroy</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+			<span class="c">// TODO:</span>
+			<span class="nx">args</span> <span class="o">=</span> <span class="nx">args</span> <span class="o">||</span> <span class="p">{};</span>
+			<span class="k">this</span><span class="p">.</span><span class="nx">fire</span><span class="p">(</span><span class="s1">&#39;region:destroy&#39;</span><span class="o">,</span> <span class="nx">args</span><span class="p">);</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">this</span><span class="p">.</span><span class="nx">Event</span><span class="p">.</span><span class="nx">purgeElement</span> <span class="p">(</span> <span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="o">,</span> <span class="kc">true</span> <span class="p">);</span>
+				<span class="c">/* removing the DOM structure if needed */</span>
+				<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">args</span><span class="p">.</span><span class="nx">partial</span><span class="p">)</span> <span class="p">{</span>
+					<span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="p">.</span><span class="nx">parentNode</span><span class="p">.</span><span class="nx">removeChild</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="p">);</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+			<span class="c">/* child regions should be destroyed as well */</span>
+			<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">c</span> <span class="k">in</span> <span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">)</span> <span class="p">{</span>
+					<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">childs</span><span class="p">[</span><span class="nx">c</span><span class="p">].</span><span class="nx">lazyload</span><span class="p">))</span> <span class="p">{</span>
+						<span class="c">// the childs with the lazyload don&#39;t need to be destroyed </span>
+						<span class="k">this</span><span class="p">.</span><span class="nx">destroy</span> <span class="p">(</span><span class="nx">args</span><span class="p">);</span>
+					<span class="p">}</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+			<span class="c">/* destroying the region itself */</span>
+			<span class="nx">obj</span><span class="p">.</span><span class="nx">destroyRegion</span> <span class="p">(</span><span class="k">this</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">};</span>
+		
+	<span class="c">/* global methods */</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">notify</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">guid</span><span class="o">,</span> <span class="nx">msg</span><span class="o">,</span> <span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">guid</span> <span class="o">&amp;&amp;</span> <span class="nx">_MODS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">guid</span><span class="p">))</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">_MODS</span><span class="p">[</span><span class="nx">guid</span><span class="p">].</span><span class="nx">fire</span><span class="p">(</span><span class="nx">msg</span><span class="o">,</span> <span class="nx">args</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">};</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">broadcast</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="o">,</span> <span class="nx">o</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">_bd</span><span class="p">)</span> <span class="p">{</span>
+		  <span class="k">return</span> <span class="nx">_bd</span><span class="p">.</span><span class="nx">broadcast</span><span class="p">(</span><span class="s1">&#39;broadcast&#39;</span><span class="o">,</span> <span class="nx">msg</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">};</span>
+	<span class="c">/* regions */</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">setRegionDefinition</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">ns</span><span class="o">,</span> <span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_LOADERS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">ns</span><span class="p">))</span> <span class="p">{</span>
+			<span class="c">// registering the new region</span>
+			<span class="nx">_LOADERS</span><span class="p">[</span><span class="nx">ns</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">_modLoader</span> <span class="p">(</span><span class="nx">ns</span><span class="p">);</span>
+		<span class="p">}</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">c</span><span class="p">.</span><span class="nx">ns</span> <span class="o">=</span> <span class="nx">ns</span><span class="o">;</span>
+			<span class="nx">_LOADERS</span><span class="p">[</span><span class="nx">ns</span><span class="p">].</span><span class="nx">set</span><span class="p">(</span><span class="nx">c</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">};</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">isRegion</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">ns</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">_LOADERS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">ns</span><span class="p">);</span>
+	<span class="p">};</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">initRegion</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">guid</span><span class="o">,</span> <span class="nx">mod</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">_waiting</span><span class="p">.</span><span class="nx">push</span> <span class="p">({</span>
+			<span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;initRegion&#39;</span><span class="o">,</span>
+			<span class="nx">args</span><span class="o">:</span> <span class="p">[</span><span class="nx">guid</span><span class="o">,</span> <span class="nx">mod</span><span class="p">]</span>
+		<span class="p">});</span>
+	<span class="p">};</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">destroyRegion</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">mod</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">mod</span> <span class="o">&amp;&amp;</span> <span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span> <span class="o">&amp;&amp;</span> <span class="nx">mod</span><span class="p">.</span><span class="nx">ns</span> <span class="o">&amp;&amp;</span> <span class="nx">_MODS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">mod</span> <span class="o">===</span> <span class="nx">_MODS</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span><span class="p">]))</span> <span class="p">{</span>
+			<span class="nx">delete</span> <span class="nx">_MODS</span><span class="p">[</span><span class="nx">mod</span><span class="p">.</span><span class="nx">guid</span><span class="p">];</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+		  <span class="c">// error: someone is trying the remove a region (only the region itself can do this call)</span>
+		  <span class="k">return</span><span class="o">;</span>
+		<span class="p">}</span>
+	<span class="p">};</span>
+	
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">clearRegion</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">guid</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">_MODS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">guid</span><span class="p">))</span> <span class="p">{</span>
+			<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] removing the region manually.&#39;</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="p">);</span>
+			<span class="nx">_MODS</span><span class="p">[</span><span class="nx">guid</span><span class="p">].</span><span class="nx">destroy</span> <span class="p">({</span><span class="nx">partial</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+		<span class="p">}</span>
+	<span class="p">};</span>
+	<span class="c">/* plugins */</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">setPluginDefinition</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="o">,</span> <span class="nx">plugin</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_PLUGINS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">name</span><span class="p">))</span> <span class="p">{</span>
+			<span class="c">// registering the new plugin</span>
+			<span class="nx">_PLUGINS</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">plugin</span><span class="o">;</span>
+		<span class="p">}</span>		
+	<span class="p">};</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">isPlugin</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">_PLUGINS</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span>
+	<span class="p">};</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">initPlugin</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">_waiting</span><span class="p">.</span><span class="nx">push</span> <span class="p">({</span>
+			<span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;initPlugin&#39;</span><span class="o">,</span>
+			<span class="nx">args</span><span class="o">:</span> <span class="p">[</span><span class="nx">name</span><span class="p">]</span>
+		<span class="p">});</span>
+	<span class="p">};</span>
+	
+	<span class="c">//--------------------------------------</span>
+   	<span class="c">//  Begin public interface definition</span>
+   	<span class="c">//--------------------------------------	</span>
+	<span class="c">/**</span>
+<span class="c">     * &lt;p&gt;</span>
+<span class="c">     * Searching for an event owner based on the classname, it&#39;s similar to the ancestor method but applying the same routine to the node itself</span>
+<span class="c">     * &lt;/p&gt;</span>
+<span class="c">     * @method getOwnerByClassName</span>
+<span class="c">     * @param {HTMLElement} node The html element.</span>
+<span class="c">     * @param {String} className the class name to search for</span>
+<span class="c">     * @param {String} level the analyzis level, for performance you should try to find the ancestor within a range of levels</span>
+<span class="c">     * @return {HTMLElement | null} The matching DOM node or null if none found.</span>
+<span class="c">     */</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">getOwnerByClassName</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">node</span><span class="o">,</span> <span class="nx">className</span><span class="o">,</span> <span class="nx">level</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">fn</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span> 
+			<span class="k">return</span> <span class="nx">n</span><span class="p">.</span><span class="nx">hasClass</span><span class="p">(</span><span class="nx">className</span><span class="p">);</span> 
+		<span class="p">};</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">node</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">node</span><span class="p">.</span><span class="nx">hasClass</span><span class="p">(</span><span class="nx">className</span><span class="p">))</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">node</span><span class="p">.</span><span class="nx">ancestor</span><span class="p">(</span> <span class="nx">fn</span> <span class="p">);</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="nx">node</span><span class="o">;</span>
+    <span class="p">};</span>
+    <span class="c">/*</span>
+<span class="c">     * &lt;p&gt;</span>
+<span class="c">     * Searching for an event owner based on the tagMame, it&#39;s similar to the ancestor method but applying the same routine to the node itself</span>
+<span class="c">     * &lt;/p&gt;</span>
+<span class="c">     * @method getOwnerByTagName</span>
+<span class="c">     * @param {HTMLElement} node The html element.</span>
+<span class="c">     * @param {String} tagName the tagName to search for</span>
+<span class="c">     * @param {String} level the analyzis level, for performance you should try to find the ancestor within a range of levels</span>
+<span class="c">     * @return {HTMLElement | null} The matching DOM node or null if none found.</span>
+<span class="c">     */</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">getOwnerByTagName</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">node</span><span class="o">,</span> <span class="nx">tagName</span><span class="o">,</span> <span class="nx">level</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">tagName</span> <span class="o">=</span> <span class="nx">tagName</span><span class="p">.</span><span class="nx">toUpperCase</span><span class="p">();</span>
+		<span class="kd">var</span> <span class="nx">fn</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span> 
+			<span class="k">return</span> <span class="p">(</span><span class="nx">n</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;tagName&#39;</span><span class="p">).</span><span class="nx">toUpperCase</span><span class="p">()</span><span class="o">==</span><span class="nx">tagName</span><span class="p">);</span> 
+		<span class="p">};</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">node</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">fn</span><span class="p">(</span><span class="nx">node</span><span class="p">))</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">node</span><span class="p">.</span><span class="nx">ancestor</span><span class="p">(</span> <span class="nx">fn</span> <span class="p">);</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="nx">node</span><span class="o">;</span>
+	<span class="p">};</span>
+    <span class="c">/*</span>
+<span class="c">     * &lt;p&gt;</span>
+<span class="c">     * Testing is the node element is child of ancestor element</span>
+<span class="c">     * &lt;/p&gt;</span>
+<span class="c">     * @method getOwnerByTagName</span>
+<span class="c">     * @param {HTMLElement} node The html element.</span>
+<span class="c">     * @param {HTMLElement} ancestor The ancestor html element.</span>
+<span class="c">     * @param {String} level the analyzis level, for performance you should try to find the ancestor within a range of levels</span>
+<span class="c">     * @return {HTMLElement | null} The matching DOM node or null if none found.</span>
+<span class="c">     */</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">isAncestor</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">node</span><span class="o">,</span> <span class="nx">ancestor</span><span class="o">,</span> <span class="nx">level</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">fn</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span> 
+			<span class="k">return</span> <span class="p">(</span><span class="nx">n</span><span class="o">===</span><span class="nx">ancestor</span><span class="p">);</span> 
+		<span class="p">};</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">node</span> <span class="o">&amp;&amp;</span> <span class="nx">ancestor</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">node</span><span class="p">.</span><span class="nx">ancestor</span><span class="p">(</span> <span class="nx">fn</span> <span class="p">);</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+	<span class="p">};</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">strictMode</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span> <span class="c">/* default mode for the URIs in your website */</span>
+	<span class="c">/**</span>
+<span class="c">    * augment an url with more parameters, overriding...</span>
+<span class="c">    * @public</span>
+<span class="c">    * @param {string} url </span>
+<span class="c">    * @param {string|array} m   an string like a querystring or an json object</span>
+<span class="c">    * @return string</span>
+<span class="c">    */</span>
+    <span class="nx">obj</span><span class="p">.</span><span class="nx">augmentURI</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">url</span><span class="o">,</span> <span class="nx">m</span> <span class="p">)</span> <span class="p">{</span>
+		<span class="nx">m</span> <span class="o">=</span> <span class="nx">m</span> <span class="o">||</span> <span class="p">{};</span>
+	    <span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="nx">_parseUri</span><span class="p">(</span><span class="nx">url</span><span class="o">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">strictMode</span><span class="p">)</span><span class="o">,</span>
+	        <span class="nx">u</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">;</span>
+		<span class="nx">o</span><span class="p">.</span><span class="nx">queryKey</span> <span class="o">=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">queryKey</span> <span class="o">||</span> <span class="p">{};</span>
+		<span class="nx">_Y</span><span class="p">.</span><span class="nx">aggregate</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">queryKey</span><span class="o">,</span> <span class="nx">m</span><span class="o">,</span> <span class="kc">true</span><span class="p">);</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">protocol</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">protocol</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span><span class="o">;</span> <span class="p">}</span>
+		<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">strictMode</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="sr">/^(?:[^:\/?#]+:)?\/\//</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">source</span><span class="p">))</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="s1">&#39;//&#39;</span><span class="o">;</span> <span class="p">}</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="sr">/^(?:(?![^:@]+:[^:@\/]*@)[^:\/?#.]+:)?\/\//</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">source</span><span class="p">))</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="s1">&#39;//&#39;</span><span class="o">;</span> <span class="p">}</span>
+		<span class="p">}</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">authority</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">userInfo</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">user</span><span class="o">;</span> <span class="p">}</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">userInfo</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="s1">&#39;:&#39;</span><span class="o">;</span> <span class="p">}</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">password</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">password</span><span class="o">;</span> <span class="p">}</span>
+				<span class="nx">u</span> <span class="o">+=</span> <span class="s1">&#39;@&#39;</span><span class="o">;</span>
+			<span class="p">}</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">host</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">host</span><span class="o">;</span> <span class="p">}</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">port</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="nx">o</span><span class="p">.</span><span class="nx">port</span><span class="o">;</span> <span class="p">}</span>
+		<span class="p">}</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">relative</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">directory</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">directory</span><span class="o">;</span> <span class="p">}</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">file</span><span class="o">;</span> <span class="p">}</span>
+			<span class="p">}</span>
+			<span class="nx">u</span> <span class="o">+=</span> <span class="s1">&#39;?&#39;</span><span class="o">;//</span> <span class="o">+</span> <span class="nx">o</span><span class="p">.</span><span class="nx">query</span><span class="o">;</span>
+			<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">sName</span> <span class="k">in</span> <span class="nx">o</span><span class="p">.</span><span class="nx">queryKey</span><span class="p">)</span> <span class="p">{</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">queryKey</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">sName</span><span class="p">))</span> <span class="p">{</span>
+					<span class="nx">u</span> <span class="o">+=</span> <span class="nx">sName</span><span class="o">+</span><span class="s1">&#39;=&#39;</span><span class="o">+</span><span class="nx">o</span><span class="p">.</span><span class="nx">queryKey</span><span class="p">[</span><span class="nx">sName</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;&amp;&#39;</span><span class="o">;</span>
+				<span class="p">}</span>
+			<span class="p">}</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">anchor</span><span class="p">)</span> <span class="p">{</span> <span class="nx">u</span> <span class="o">+=</span> <span class="s1">&#39;#&#39;</span> <span class="o">+</span> <span class="nx">o</span><span class="p">.</span><span class="nx">anchor</span><span class="o">;</span> <span class="p">}</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="nx">u</span><span class="o">;</span>
+    <span class="p">};</span>
+	
+	
+	<span class="c">/**</span>
+<span class="c">     * &lt;p&gt;</span>
+<span class="c">     * Analizing all the classes for the node, and getting the hooks.</span>
+<span class="c">     * &lt;/p&gt;</span>
+<span class="c">     * @method getHooks</span>
+<span class="c">     * @param {HTMLElement} node A node reference to get the className and return the hooks list.</span>
+<span class="c">     * @return {Array} The collection of hooks (string).</span>
+<span class="c">     */</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">getHooks</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">node</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">hooks</span><span class="o">;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">node</span><span class="p">)</span> <span class="p">{</span>
+			<span class="nx">hooks</span> <span class="o">=</span> <span class="nx">_parseHooks</span><span class="p">(</span><span class="nx">node</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;className&#39;</span><span class="p">));</span>
+		<span class="p">}</span>
+	  	<span class="k">return</span> <span class="nx">hooks</span><span class="o">;</span>
+	<span class="p">};</span>
+	<span class="c">/**</span>
+<span class="c">     * &lt;p&gt;</span>
+<span class="c">     * getting the real YUI Button reference from a dom element, usually the target for a certain event</span>
+<span class="c">     * &lt;/p&gt;</span>
+<span class="c">     * @method getYUIButton</span>
+<span class="c">     * @param {HTMLElement} node The html element.</span>
+<span class="c">     * @return {Object} A reference to a real YUI Button object.</span>
+<span class="c">     */</span>
+	<span class="nx">obj</span><span class="p">.</span><span class="nx">getYUIButton</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">node</span><span class="p">)</span> <span class="p">{</span>
+		<span class="c">// we don&#39;t have support for YUI Buttons so far.</span>
+		<span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+	<span class="p">};</span>
+	<span class="c">/**</span>
+<span class="c">     * &lt;p&gt;</span>
+<span class="c">     * inserting a CSS or JS block (inline block) in the current document</span>
+<span class="c">     * &lt;/p&gt;</span>
+<span class="c">     * @method inject</span>
+<span class="c">     * @param {HTMLElement} node The html element.</span>
+<span class="c">     * @return {Object} conf literal object with the configuration of the block to load.</span>
+<span class="c">     */</span>
+	 <span class="nx">obj</span><span class="p">.</span><span class="nx">inject</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">conf</span><span class="p">)</span> <span class="p">{</span>
+		<span class="kd">var</span> <span class="nx">h</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementsByTagName</span><span class="p">(</span><span class="s1">&#39;head&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">||</span> <span class="nb">document</span><span class="p">.</span><span class="nx">documentElement</span><span class="o">,</span> <span class="nx">s</span><span class="o">;</span>
+		<span class="nx">conf</span> <span class="o">=</span> <span class="nx">conf</span> <span class="o">||</span> <span class="p">{};</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">conf</span><span class="p">.</span><span class="nx">css</span><span class="p">)</span> <span class="p">{</span>
+			<span class="c">// injecting css</span>
+			<span class="nx">s</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">&quot;style&quot;</span><span class="p">);</span>
+			<span class="nx">s</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;text/css&quot;</span><span class="o">;</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">styleSheet</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">s</span><span class="p">.</span><span class="nx">styleSheet</span> <span class="o">===</span> <span class="s1">&#39;object&#39;</span><span class="p">))</span> <span class="p">{</span>
+			  <span class="nx">s</span><span class="p">.</span><span class="nx">styleSheet</span><span class="p">.</span><span class="nx">cssText</span> <span class="o">=</span> <span class="nx">conf</span><span class="p">.</span><span class="nx">css</span><span class="o">;</span>
+			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			  <span class="nx">s</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">createTextNode</span><span class="p">(</span><span class="nx">conf</span><span class="p">.</span><span class="nx">css</span><span class="p">));</span>
+			<span class="p">}</span>
+			<span class="nx">h</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+		<span class="p">}</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nx">conf</span><span class="p">.</span><span class="nx">js</span><span class="p">)</span> <span class="p">{</span>
+			<span class="c">// injecting js</span>
+			<span class="nx">s</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;script&#39;</span><span class="p">);</span>
+			<span class="nx">conf</span><span class="p">.</span><span class="nx">js</span> <span class="o">=</span> <span class="nx">conf</span><span class="p">.</span><span class="nx">js</span><span class="p">.</span><span class="nx">replace</span> <span class="p">(</span><span class="nx">_reTrim</span><span class="o">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+			<span class="nx">s</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">&quot;text/javascript&quot;</span><span class="o">;</span>
+			<span class="c">/* hack: IE doesn&#39;t support appendChild+document.createTextNode, using .text instead */</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nx">_Y</span><span class="p">.</span><span class="nx">UA</span><span class="p">.</span><span class="nx">ie</span><span class="p">)</span> <span class="p">{</span>
+				<span class="nx">s</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="nx">conf</span><span class="p">.</span><span class="nx">js</span><span class="o">;</span>
+			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+				<span class="nx">s</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createTextNode</span><span class="p">(</span> <span class="nx">conf</span><span class="p">.</span><span class="nx">js</span> <span class="p">)</span> <span class="p">);</span>
+			<span class="p">}</span>
+			<span class="nx">h</span><span class="p">.</span><span class="nx">insertBefore</span><span class="p">(</span><span class="nx">s</span><span class="o">,</span> <span class="nx">h</span><span class="p">.</span><span class="nx">firstChild</span><span class="p">);</span>
+			<span class="nx">h</span><span class="p">.</span><span class="nx">removeChild</span><span class="p">(</span><span class="nx">s</span><span class="p">);</span>
+		<span class="p">}</span>
+	<span class="p">};</span>
+	
+	<span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">YRegion3_config</span> <span class="o">||</span> <span class="p">{}</span><span class="o">,</span>
+		<span class="nx">r</span> <span class="o">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">require</span> <span class="o">||</span> <span class="p">[]</span><span class="o">,</span>
+		<span class="nx">l</span> <span class="o">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">_loader</span> <span class="o">||</span> <span class="p">{}</span><span class="o">,</span>
+		<span class="nx">root</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="nx">ns</span><span class="o">:</span> <span class="s1">&#39;yregion&#39;</span><span class="o">,</span>
+			<span class="nx">_debug</span><span class="o">:</span> <span class="nx">c</span><span class="p">.</span><span class="nx">_debug</span><span class="o">,</span>
+			<span class="nx">_loader</span><span class="o">:</span> <span class="nx">l</span><span class="o">,</span>
+			<span class="nx">dependencies</span><span class="o">:</span> <span class="nx">c</span><span class="p">.</span><span class="nx">dependencies</span><span class="o">,</span>
+			<span class="nx">plugins</span><span class="o">:</span> <span class="nx">c</span><span class="p">.</span><span class="nx">plugins</span><span class="o">,</span>
+			<span class="nx">actions</span><span class="o">:</span> <span class="p">{</span>
+				<span class="s1">&#39;region:ready&#39;</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+					<span class="kd">var</span> <span class="nx">i</span><span class="o">,</span> <span class="nx">m</span><span class="o">,</span> <span class="nx">k</span><span class="o">;</span>
+					<span class="c">/* the general infrastrucure is ready */</span>
+					<span class="nx">_bd</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+					<span class="c">/* debug console */</span>
+					<span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_debug</span><span class="p">)</span> <span class="p">{</span>
+						<span class="k">new</span> <span class="nx">Y</span><span class="p">.</span><span class="nx">Console</span><span class="p">().</span><span class="nx">render</span><span class="p">();</span> 
+					<span class="p">}</span>
+
+					<span class="c">/* setting the listeners */</span>
+					
+					<span class="c">// clicks events...</span>
+					<span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+						<span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="nx">_getSemantic</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="o">,</span>
+							<span class="nx">m</span> <span class="o">=</span> <span class="nx">_parseHooks</span> <span class="p">(</span> <span class="nx">o</span><span class="p">.</span><span class="nx">classes</span> <span class="p">)</span><span class="o">,</span> 
+							<span class="nx">r</span> <span class="o">=</span> <span class="nx">_trickling</span><span class="p">(</span><span class="nx">_bd</span><span class="o">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">);</span>
+						<span class="nx">m</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">);</span>
+						<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span> <span class="o">&amp;&amp;</span> <span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+							<span class="nx">r</span><span class="p">.</span><span class="nx">bubbling</span> <span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="o">,</span> <span class="nx">m</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+						<span class="p">}</span>
+					<span class="p">}</span><span class="o">,</span> <span class="k">this</span><span class="p">);</span>
+					
+					<span class="c">// focus and blur...</span>
+					<span class="c">// http://developer.yahoo.com/yui/3/event/#focusblur</span>
+					<span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;focus&#39;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+						<span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="nx">_getSemantic</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="o">,</span>
+							<span class="nx">m</span> <span class="o">=</span> <span class="nx">_parseHooks</span> <span class="p">(</span> <span class="nx">o</span><span class="p">.</span><span class="nx">classes</span> <span class="p">)</span><span class="o">,</span> 
+							<span class="nx">r</span> <span class="o">=</span> <span class="nx">_trickling</span><span class="p">(</span><span class="nx">_bd</span><span class="o">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">);</span>
+						<span class="nx">m</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;focus&#39;</span><span class="p">);</span>
+						<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span> <span class="o">&amp;&amp;</span> <span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+							<span class="nx">r</span><span class="p">.</span><span class="nx">bubbling</span> <span class="p">(</span><span class="s1">&#39;focus&#39;</span><span class="o">,</span> <span class="nx">m</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+						<span class="p">}</span>
+					<span class="p">}</span><span class="o">,</span> <span class="k">this</span><span class="p">);</span>
+					<span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;blur&#39;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+						<span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="nx">_getSemantic</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="o">,</span>
+							<span class="nx">m</span> <span class="o">=</span> <span class="nx">_parseHooks</span> <span class="p">(</span> <span class="nx">o</span><span class="p">.</span><span class="nx">classes</span> <span class="p">)</span><span class="o">,</span> 
+							<span class="nx">r</span> <span class="o">=</span> <span class="nx">_trickling</span><span class="p">(</span><span class="nx">_bd</span><span class="o">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">);</span>
+						<span class="nx">m</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;focus&#39;</span><span class="p">);</span>
+						<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span> <span class="o">&amp;&amp;</span> <span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+							<span class="nx">r</span><span class="p">.</span><span class="nx">bubbling</span> <span class="p">(</span><span class="s1">&#39;focus&#39;</span><span class="o">,</span> <span class="nx">m</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+						<span class="p">}</span>
+					<span class="p">}</span><span class="o">,</span> <span class="k">this</span><span class="p">);</span>
+					
+					<span class="c">// mouse events</span>
+					<span class="nx">m</span> <span class="o">=</span>  <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+						<span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="nx">_createMsgObject</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="o">,</span>
+							<span class="nx">r</span> <span class="o">=</span> <span class="nx">_trickling</span><span class="p">(</span><span class="nx">_bd</span><span class="o">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">target</span><span class="p">)</span><span class="o">,</span> <span class="nx">t</span><span class="o">;</span>
+						<span class="k">if</span> <span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">target</span> <span class="o">&amp;&amp;</span> <span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+							<span class="c">// checking for region:mouseenter</span>
+							<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">e</span><span class="p">.</span><span class="nx">relatedTarget</span> <span class="o">||</span> <span class="o">!</span><span class="nx">obj</span><span class="p">.</span><span class="nx">isAncestor</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">node</span><span class="o">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">relatedTarget</span><span class="p">))</span> <span class="p">{</span>
+								<span class="nx">r</span><span class="p">.</span><span class="nx">fire</span> <span class="p">(</span><span class="s1">&#39;region:&#39;</span><span class="o">+</span><span class="nx">e</span><span class="p">.</span><span class="nx">type</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+							<span class="p">}</span>
+							<span class="c">// default mouse over message</span>
+							<span class="nx">r</span><span class="p">.</span><span class="nx">bubbling</span> <span class="p">(</span><span class="s1">&#39;mouse&#39;</span><span class="o">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">type</span><span class="o">,</span> <span class="nx">o</span><span class="p">);</span>
+						<span class="p">}</span>
+					<span class="p">};</span>
+					<span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;mouseover&quot;</span><span class="o">,</span> <span class="nx">m</span><span class="o">,</span> <span class="k">this</span><span class="p">);</span>
+	    			<span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;mouseout&quot;</span><span class="o">,</span> <span class="nx">m</span><span class="o">,</span> <span class="k">this</span><span class="p">);</span>
+					
+					<span class="c">// keyboard events...</span>
+					<span class="c">// http://developer.yahoo.com/yui/3/event/#keylistener</span>
+					<span class="nx">k</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">_bd</span><span class="p">.</span><span class="nx">broadcast</span> <span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="o">,</span> <span class="nx">e</span><span class="p">.</span><span class="nx">type</span><span class="o">,</span> <span class="nx">_createMsgObject</span> <span class="p">(</span><span class="nx">e</span><span class="p">));</span>
+					<span class="p">};</span>
+					<span class="nx">_Y</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;keypress&#39;</span><span class="o">,</span> <span class="nx">k</span><span class="o">,</span> <span class="s1">&#39;document&#39;</span><span class="p">);</span>
+					<span class="nx">_Y</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;keyup&#39;</span><span class="o">,</span> <span class="nx">k</span><span class="o">,</span> <span class="s1">&#39;document&#39;</span><span class="p">);</span>
+					<span class="nx">_Y</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;keydown&#39;</span><span class="o">,</span> <span class="nx">k</span><span class="o">,</span> <span class="s1">&#39;document&#39;</span><span class="p">);</span>
+					
+					<span class="c">// window events... pending</span>
+					<span class="nx">_Y</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;window&#39;</span><span class="o">,</span> <span class="s2">&quot;resize&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+						<span class="nx">_bd</span><span class="p">.</span><span class="nx">broadcast</span> <span class="p">(</span><span class="s1">&#39;window&#39;</span><span class="o">,</span> <span class="s1">&#39;resize&#39;</span><span class="o">,</span> <span class="nx">_createMsgObject</span> <span class="p">(</span><span class="nx">e</span><span class="p">));</span>
+					<span class="p">});</span>
+					
+					<span class="c">/* transforming the region initialization mechanism */</span>
+					<span class="nx">obj</span><span class="p">.</span><span class="nx">initRegion</span> <span class="o">=</span> <span class="nx">_initRegion</span><span class="o">;</span>
+					<span class="c">/* transforming the plugins mechanism */</span>
+					<span class="nx">obj</span><span class="p">.</span><span class="nx">initPlugin</span> <span class="o">=</span> <span class="nx">_initPlugin</span><span class="o">;</span>
+					<span class="c">/* dispatching the waiting line */</span>
+					<span class="k">if</span> <span class="p">(</span><span class="nx">_waiting</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+						<span class="k">while</span> <span class="p">((</span><span class="nx">i</span> <span class="o">=</span> <span class="nx">_waiting</span><span class="p">.</span><span class="nx">pop</span><span class="p">()))</span> <span class="p">{</span>
+							<span class="nx">obj</span><span class="p">[</span><span class="nx">i</span><span class="p">.</span><span class="nx">method</span><span class="p">].</span><span class="nx">apply</span><span class="p">(</span><span class="nx">obj</span><span class="o">,</span> <span class="nx">i</span><span class="p">.</span><span class="nx">args</span><span class="p">);</span>
+						<span class="p">}</span>
+					<span class="p">}</span>
+					<span class="c">/* extending the global region */</span>
+					<span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">actions</span> <span class="o">&amp;&amp;</span> <span class="nx">_Y</span><span class="p">.</span><span class="nx">Lang</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">actions</span><span class="p">[</span><span class="s1">&#39;region:ready&#39;</span><span class="p">]))</span> <span class="p">{</span>
+						<span class="nx">c</span><span class="p">.</span><span class="nx">actions</span><span class="p">[</span><span class="s1">&#39;region:ready&#39;</span><span class="p">].</span><span class="nx">apply</span> <span class="p">(</span><span class="k">this</span><span class="o">,</span> <span class="p">[]);</span>
+					<span class="p">}</span>
+					<span class="k">this</span><span class="p">.</span><span class="nx">install</span> <span class="p">((</span><span class="nx">c</span><span class="p">.</span><span class="nx">actions</span> <span class="o">||</span> <span class="p">{}));</span>
+				<span class="p">}</span><span class="o">,</span>
+				<span class="s1">&#39;click:click&#39;</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+					<span class="nx">_Y</span><span class="p">.</span><span class="nx">log</span> <span class="p">(</span><span class="s1">&#39;[YRegion3] global &quot;click:click&quot;: &#39;</span><span class="o">,</span> <span class="s1">&#39;info&#39;</span><span class="o">,</span> <span class="nx">arguments</span><span class="p">);</span>
+				<span class="p">}</span>
+			<span class="p">}</span><span class="o">,</span>
+			<span class="nx">waiting</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
+				<span class="kd">var</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+				<span class="c">/* waiting until the body element become available, probably we should wait until domready instead  */</span>
+				<span class="nx">_Y</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">&quot;domready&quot;</span><span class="o">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+					<span class="nx">that</span><span class="p">.</span><span class="nx">node</span> <span class="o">=</span> <span class="nx">that</span><span class="p">.</span><span class="nx">Y</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">);</span>
+					<span class="nx">f</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">that</span><span class="p">.</span><span class="nx">node</span><span class="o">,</span> <span class="p">[]);</span>
+				<span class="p">});</span>
+				<span class="k">return</span> <span class="k">this</span><span class="o">;</span> <span class="c">/* chaining */</span>
+			<span class="p">}</span><span class="o">,</span>
+			<span class="nx">args</span><span class="o">:</span> <span class="p">{}</span>
+		<span class="p">};</span>
+
+	<span class="c">// injecting the default list of requirements </span>
+	<span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s2">&quot;yui&quot;</span><span class="o">,</span> <span class="s2">&quot;oop&quot;</span><span class="o">,</span> <span class="s2">&quot;event&quot;</span><span class="o">,</span> <span class="s2">&quot;dom&quot;</span><span class="o">,</span> <span class="s2">&quot;node&quot;</span><span class="o">,</span> <span class="s2">&quot;io-base&quot;</span><span class="o">,</span> <span class="s2">&quot;io-queue&quot;</span><span class="p">);</span>
+
+	<span class="c">// default filter based on the debug flag</span>
+	<span class="k">if</span> <span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">_debug</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">l</span><span class="p">.</span><span class="nx">filter</span> <span class="o">=</span> <span class="s1">&#39;debug&#39;</span><span class="o">;</span>	
+		<span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;console&#39;</span><span class="p">);</span>
+	<span class="p">}</span>
+	
+	<span class="c">/* saving the requirements list */</span>
+	<span class="nx">root</span><span class="p">.</span><span class="nx">require</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">r</span><span class="o">,</span> <span class="mi">0</span><span class="p">);</span>
+
+	<span class="c">/* creating the global loader object */</span>
+	<span class="nx">_Y</span> <span class="o">=</span> <span class="nx">YUI</span><span class="p">(</span><span class="nx">l</span><span class="p">);</span>
+	<span class="c">/* inserting the default requirements (Y.use) */</span>
+	<span class="nx">r</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">Y</span><span class="p">)</span> <span class="p">{</span>
+		<span class="c">/* global region definition: document.body */</span>
+		<span class="nx">_initRegion</span><span class="p">((</span><span class="nx">c</span><span class="p">.</span><span class="nx">guid</span><span class="o">?</span><span class="nx">c</span><span class="p">.</span><span class="nx">guid</span><span class="o">:</span><span class="s1">&#39;yregion&#39;</span><span class="p">)</span><span class="o">,</span> <span class="nx">root</span><span class="p">);</span>
+	<span class="p">});</span>
+	<span class="nx">_Y</span><span class="p">.</span><span class="nx">use</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">_Y</span><span class="o">,</span> <span class="nx">r</span><span class="p">);</span>
+
+	<span class="k">return</span> <span class="nx">obj</span><span class="o">;</span>
+<span class="p">}();</span>
+</pre></div>

@@ -1,16 +1,22 @@
-/*
- * Provides YRegion Utility definition based on YUI 2.x.
+/** 
+ * Provides YRegion2 Utility definition based on YUI 2.x.
  *
- * YRegion allows us to define the functionality of different areas (regions) on the page, 
+ * YRegion2 allows us to define the functionality of different areas (regions) on the page, 
  * controlling the events, the loading process of its dependencies and setting a secure scope 
  * to define the region functionality in a consistent way. 
  * 
  * It also creates a communication infrastructure layer among the regions on the page. 
- * 
- * @module YRegion
+ *
+ * @module yregion2
+ */
+
+/**
+ * Provides YRegion2 Utility methods.
+ *
+ * @class YRegion2
  * @static
  */
-YRegion = window.YRegion || function(){
+YRegion2 = window.YRegion2 || function(){
     var obj = {},
 	    _LOADERS = {},
 		_MODS = {},
@@ -35,7 +41,7 @@ YRegion = window.YRegion || function(){
 		_loaderQueue = [],
 		_regionAbstraction = null,
 		_bd = null;
-   	/*
+   	/**
 	 * Add a list of files to the hash table with the cachable files.
 	 * @method _cache
 	 * @private
@@ -50,7 +56,7 @@ YRegion = window.YRegion || function(){
 		}
 	}
 	
-	/*
+	/**
 	 * Check if a file object was already cached based in the fullpath
 	 * @method _cached
 	 * @private
@@ -72,7 +78,7 @@ YRegion = window.YRegion || function(){
 		}
 		return false;
 	}
-	/*
+	/**
 	 * Continue with the loading process, removing the first set from the list, 
 	 * and continue with the next in line.
 	 * @method _loaderNext
@@ -91,7 +97,7 @@ YRegion = window.YRegion || function(){
 			i.callback.call();
 		}
 	}
-	/*
+	/**
 	 * Create a message object based on a DOM Event
 	 * @method _loaderDispatch
 	 * @private
@@ -100,25 +106,25 @@ YRegion = window.YRegion || function(){
 	 */
 	function _loaderDispatch () {
 		if (_loaderQueue.length > 0) {
-YAHOO.log ('[YRegion] [Loader Queue] loading... ', _loaderQueue[0].require);
+YAHOO.log ('[YRegion2] [Loader Queue] loading... ', _loaderQueue[0].require);
 			_loaderObj.require(_loaderQueue[0].require);
 			_loaderObj.insert({
 				onSuccess: function() {
-YAHOO.log ('[YRegion] [Loader Queue] success...');
+YAHOO.log ('[YRegion2] [Loader Queue] success...');
 					_loaderNext(true);
 				},
 				onFailure: function () {
-YAHOO.log ('[YRegion] [Loader Queue] failure...');
+YAHOO.log ('[YRegion2] [Loader Queue] failure...');
 					_loaderNext();
 				},
 				onTimeout: function() {
-YAHOO.log ('[YRegion] [Loader Queue] timeout...');
+YAHOO.log ('[YRegion2] [Loader Queue] timeout...');
 					_loaderNext();
 				}
 			}, _loaderQueue[0].type);
 		}
 	}
-	/*
+	/**
 	 * Create a message object based on a DOM Event, the message object will be passed
 	 * to all the listeners, and can be populated using the signature event.
 	 * @method _createMsgObject
@@ -138,7 +144,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		o.stopEvent = function () { o.flagged = true; YAHOO.util.Event.stopEvent(e); };
 		return o;
 	}
-	/*
+	/**
 	 * Transform the target element into a semantic object
 	 * @method _getSemantic
 	 * @private
@@ -176,7 +182,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 	  }
 	  return o;
 	}
-	/*
+	/**
 	 * Parse an string and return the list of hooks
 	 * @method _parseHooks
 	 * @private
@@ -192,7 +198,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 	  }
 	  return hooks;
 	}
-	/*
+	/**
 	 * Create a new instance of a region.
 	 * @method _initRegion
 	 * @private
@@ -209,7 +215,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			mod.ondomready = false;
 			/* a region can wait until onDOMReady */
 			YAHOO.util.Event.onDOMReady (function(o) {
-				YAHOO.log ('[YRegion] init region on DOMReady: ', guid);
+				YAHOO.log ('[YRegion2] init region on DOMReady: ', guid);
 				obj.initRegion(guid, mod);
 			});
 		} else {
@@ -235,7 +241,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 		}
 	}
-	/*
+	/**
 	 * Inject a plugin into the global region represented by "document.body".
 	 * @method _initPlugin
 	 * @private
@@ -246,7 +252,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 	function _initPlugin (name) {
 		_bd.initPlugin(name);
 	}
-	/*
+	/**
 	 * Inspecting child regions to determine which region owns the target element.
 	 * @method _trickling
 	 * @private
@@ -271,7 +277,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		}
 		return region; // chain support
 	}
-	/*
+	/**
 	 * Parsing an url using strict of loose mode.
 	 * TODO: modify to use strict mode with an static regex
 	 * @method _parseUri
@@ -298,7 +304,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		});
 		return uri;
 	}
-	/*
+	/**
 	 * <p>
 	 * Creating an object with the shorthands references.
 	 * </p>
@@ -326,22 +332,20 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		};	
 	}
 	
-	/*
-	 * <p>
-	 * Define an object to control the loading process for a Region Definition, everytime you 
-	 * try to initialize a region, the new modLoader instance needs to load the region definition 
-	 * on demand.
-	 * </p>
-	 * @class _modLoader
-	 * @private
-	 * @param {string} ns the namespace of the region definition
-	 * @constructor
-	 */
-	var _modLoader = function (ns) {
+    /**
+ 	 * Provides a prototype to control the loading process for an undefined RegionDefinition. A RegionLoader 
+ 	 * instance controls the loading of a RegionDefinition, and notify to the regions when its definition become available.
+ 	 * @class RegionLoader2
+ 	 * @constructor
+ 	 * @param {String} ns RegionDefinition namespace
+ 	 * @for YRegion2
+ 	 * @return {Object} RegionLoader instance
+ 	 */
+ 	var _modLoader = function (ns) {
 		this.ns = ns;
 	};
 	_modLoader.prototype = {
-		/*
+		/**
 		 * <p>
 		 * Load a Region Definition
 		 * </p>
@@ -359,7 +363,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return YAHOO.util.Get.script(uri, callback);
 		},
-		/*
+		/**
 		 * <p>
 		 * Set a Region Definition, when a new region definition is included in the current page,
 		 * these method will be executed to notify to everybody that a new region definition is ready.
@@ -375,7 +379,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			// finally, notifying everybody that the region definition is ready
 		    this.notify();
 		},
-		/*
+		/**
 		 * <p>
 		 * Create a new instance, inheriting the region definition methods.
 		 * </p>
@@ -395,7 +399,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			/* initializing the region instance */
 			mod.init();
 		},
-		/*
+		/**
 		 * <p>
 		 * Subscribe a new instance to this region definition, when the class become available, the 
 		 * subscriber will get a notification.
@@ -413,7 +417,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 				this.notify ();
 			}
 		},
-		/*
+		/**
 		 * <p>
 		 * Notify to all the subscribers (queue of regions) that the region definition is ready, this process will 
 		 * garranty that this region instances will be instantiated after the class become available.
@@ -432,9 +436,14 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		}
 	};
 	
-	/* Generic Region */
+	/**
+	 * Provides a set of generic methods that each region instance inherits automatically.
+	 * @class RegionDefinition2
+	 * @static
+	 * @for YRegion2
+	 */
 	_regionAbstraction = {
-		/*
+		/**
 		 * <p>
 		 * execute the internal initialization process for the region
 		 * </p>
@@ -442,12 +451,12 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		 * @return {Object} region reference to support chaining
 		 */
 		init: function () {
-		    YAHOO.log ('[YRegion] creating: ', this.guid);
+		    YAHOO.log ('[YRegion2] creating: ', this.guid);
 			var f, i, files = [], r, l, that = this;
 			/* filtering get and post arguments for the server side */
 			this.getargs = (this.getargs?this.getargs:{});
 			this.postargs = (this.postargs?this.postargs:{});
-			YAHOO.log ('[YRegion] decoding server (get and post) arguments: ', this.getargs, this.postargs);
+			YAHOO.log ('[YRegion2] decoding server (get and post) arguments: ', this.getargs, this.postargs);
 		    // starting the loading routine for the dependencies...
 			// loading the requiredments
 		    r = Array.prototype.slice.call((this.require || []), 0);
@@ -470,14 +479,14 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 					files.push (f.fullpath);
 				}
 			}
-			YAHOO.log ('[YRegion] loading the requirements: ', this.guid, r);
+			YAHOO.log ('[YRegion2] loading the requirements: ', this.guid, r);
 			f = function () {
 				var el = this;
 				that.container = el;
-				YAHOO.log ('[YRegion] the DOM element for the region is ready: ', el);
+				YAHOO.log ('[YRegion2] the DOM element for the region is ready: ', el);
 				/* if the region have a wrapper, we can assume that we need to create the container within that wrapper */
 				if (that.wrapper) {
-					YAHOO.log ('[YRegion] creating the container for the area: ', that.guid, el);
+					YAHOO.log ('[YRegion2] creating the container for the area: ', that.guid, el);
 					this.addToBody({
 						attributes: {
 							id: that.guid
@@ -487,7 +496,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 				}
 				/* if the region is an AJAX region, it shoult be loaded dynamically using YUI Connection Manager */
 				if (that.ajax) {
-					YAHOO.log ('[YRegion] init an AJAX region');
+					YAHOO.log ('[YRegion2] init an AJAX region');
 					/* we shoudl use ajax to load the content of the region */
 					YAHOO.lang.augmentObject(that, _getShorthands());
 					that.execute('render', {}, function(o) {
@@ -513,7 +522,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			});
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * Waiting until the DOM element that represents the region become available
 		 * </p>
@@ -524,17 +533,17 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		onAvailable: function (f) {
 			/* no wrapper or the wrapper is an ID, we should wait until the guid or the wrapper become available */
 			var c = this.wrapper || this.guid, el;
-			YAHOO.log ('[YRegion] the dependencies are ready, now we need to wait for the DOM element: ', this.guid, c);
+			YAHOO.log ('[YRegion2] the dependencies are ready, now we need to wait for the DOM element: ', this.guid, c);
 			if (YAHOO.util.Dom.inDocument(c) && (el = YAHOO.util.Dom.get(c))) {
-			  YAHOO.log ('[YRegion] [onAvailable] the element is already in the DOM', c);
+			  YAHOO.log ('[YRegion2] [onAvailable] the element is already in the DOM', c);
 			  f.apply (el, []);
 			} else {
-			  YAHOO.log ('[YRegion] [onAvailable] Using YUI Event onAvailable to wait for the element', c);
+			  YAHOO.log ('[YRegion2] [onAvailable] Using YUI Event onAvailable to wait for the element', c);
 			  YAHOO.util.Event.onAvailable (c, f);
 			}
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * get the region ready when all the requiredment, dependencies and DOM element available
 		 * </p>
@@ -573,14 +582,14 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			this.fire('region:ready');
 			YAHOO.util.Event.onContentReady (this.guid, function () {
-				YAHOO.log ('[YRegion] region is ready to be expanded: ', that.guid);
+				YAHOO.log ('[YRegion2] region is ready to be expanded: ', that.guid);
 				that.fire('region:contentready');
 				/* also, yregion support integration with unit test */
 				that.fire('test:ready');
 			});
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * plug all the actions defined by a plugin within the region
 		 * </p>
@@ -594,13 +603,13 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 				for (a in plugin) {
 					if (plugin.hasOwnProperty(a)) {
 						this.on(a, plugin[a]);
-						YAHOO.log ('[YRegion] adding a new message: ', this.guid, a);
+						YAHOO.log ('[YRegion2] adding a new message: ', this.guid, a);
 					}
 				}
 			}
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * inject a plugin within the region
 		 * </p>
@@ -612,11 +621,11 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			if (_PLUGINS.hasOwnProperty(name)) {
 			  this.install(_PLUGINS[name]);
 		    } else {
-			  YAHOO.log ('[YRegion] error adopting a unknown plugin:', name);
+			  YAHOO.log ('[YRegion2] error adopting a unknown plugin:', name);
 		    }
 			return this; /* chaining */
 		}, 
-		/*
+		/**
 		 * <p>
 		 * insert a set of YUI Modules and execute a callback method. The last argument in the list is the callback function
 		 * </p>
@@ -644,7 +653,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * include a set or requirements and dependencies before intanciate the region
 		 * </p>
@@ -660,7 +669,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			if (callback) {
 			  mods.push (function(M) {
 				// loading the inclusions
-				YAHOO.log ('[YRegion] the requirements are ready, now we need to load the dependencies: ', f );
+				YAHOO.log ('[YRegion2] the requirements are ready, now we need to load the dependencies: ', f );
 				if (YAHOO.lang.isArray(f) && (f.length > 0)) {
 					YAHOO.util.Get.script(f, { 
 					  onSuccess: function(o) {
@@ -680,7 +689,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * Set a new content for node element within the region
 		 * </p>
@@ -703,11 +712,11 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 				});
 			}
 			else { 
-				YAHOO.log ('[YRegion] Invalid Selector: ', xpath); 
+				YAHOO.log ('[YRegion2] Invalid Selector: ', xpath); 
 			}
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * Set a new content for the region
 		 * </p>
@@ -729,7 +738,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * Add a new DOM structure (content or DOM representation) into the region or a node element within the region
 		 * </p>
@@ -761,7 +770,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * <p>
 		 * Init a child region instance
 		 * </p>
@@ -777,7 +786,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			obj.initRegion (guid, mod);
 			return this; /* chaining support */
 		},
-		/*
+		/**
 		 * <p>
 		 * Wake a child region, initializing a lazyload region instance
 		 * </p>
@@ -791,7 +800,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return this; /* chaining support */
 		},
-		/*
+		/**
 		 * <p>
 		 * Set a new child for the current region.
 		 * </p>
@@ -806,7 +815,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return this; /* chaining support */
 		},
-		/*
+		/**
 		 * <p>
 		 * getting a child region based on the GUID.
 		 * </p>
@@ -817,7 +826,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		getChild: function (guid) {
 			return ((this.childs && this.childs.hasOwnProperty(guid))?this.child[guid]:null);
 		},
-		/*
+		/**
 		 * <p>
 		 * getting a node element based on the CSS selector.
 		 * </p>
@@ -831,10 +840,16 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			var el = YAHOO.util.Selector.query(xpath, node.get('element'), true); 
 			return (el?new YAHOO.util.Element(el):null);
 		},
-		/*
+		/**
 		 * Return the visualization properties for the current region
+		 *
+		 * The viewport obj looks like this: 
+		 * <p>
+		 * {x:10, y:10, width: 10, height: 10, ... }
+		 * </p>
+		 * 
 		 * @method getViewport
-		 * @return {Object} the literal object with the par {x:10, y:10, width: 10, height: 10, ... }
+		 * @return {Object} the literal object with the viewport properties 
 		 */
 		getViewport: function () {
 			var el = this.container,
@@ -849,10 +864,16 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return r;
 		},
-		/*
+		/**
 		 * Set new dimention properties for the current region
+		 *
+		 * The viewport o configuration looks like this: 
+		 * <p>
+		 * {width: 10, height: 10, ... }
+		 * </p>
+		 * 
 		 * @method setViewport
-		 * @param {Object} o literal object with the new style definition, like this: {width: 10, height: 10, ... }
+		 * @param {Object} o literal object with the new configuration for the viewport
 		 * @return {object} region reference to support chaining
 		 */
 		setViewport: function (o) {
@@ -865,7 +886,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			}
 			return this; /* chaining support */
 		},
-		/*
+		/**
 		 * Set a new listener for an specific message
 		 * @method on
 		 * @param {String} layer the name of the message to listen for
@@ -881,7 +902,7 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 			this.listeners[layer].subscribe (listener, args);
 			return this; /* chaining */
 		},
-		/*
+		/**
 		 * Fire a message across the region
 		 * @method fire
 		 * @param {String} layer the name of the message to fire
@@ -891,12 +912,12 @@ YAHOO.log ('[YRegion] [Loader Queue] timeout...');
 		fire: function (layer, o) {
 			o = o || {};
 			if (this.listeners && this.listeners.hasOwnProperty(layer)) {
-if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', this.guid, layer, o); }
+if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion2] Firing a message: ', this.guid, layer, o); }
 				this.listeners[layer].fire (o);
 			}
 			return o.flagged;
 		},
-		/*
+		/**
 		 * <p>
 		 * Sign a set of arguments based on a flagged property. If another listener had claim the message,
 		 * setting the flagged to true, which means that no other listener should consume this message.
@@ -912,7 +933,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		},
 		inject: obj.inject,
 		notify: obj.notify,
-		/*
+		/**
 		 * <p>
 		 * Process a list of messages, and bubble up those messages all the way up thru the parents
 		 * </p>
@@ -930,7 +951,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			if (!flag) { /* there is not need to send the messages for the current region */
 			  for (var i=0; i<msgs.length; i++) {
 				if (layer != 'mouse') {
-				  YAHOO.log ('[YRegion] new bubbling up message: ', this.guid, layer + ":" + msgs[i], o);
+				  YAHOO.log ('[YRegion2] new bubbling up message: ', this.guid, layer + ":" + msgs[i], o);
 				}
 				this.fire(layer + ":" + msgs[i], o);
 			  }
@@ -940,7 +961,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			}
 			return o.flagged;
 		},
-		/*
+		/**
 		 * <p>
 		 * Process a message, and broadcasting the message to all the child regions
 		 * </p>
@@ -957,7 +978,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			o.flagged = false; /* you can't stop a broadcast message */
 			if (!flag) { /* there is not need to send the messages for the current region */
 			  this.fire(layer + ":" + msg, o);
-			  YAHOO.log ('[YRegion] new broadcast message: ', this.guid, layer + ":" + msg, o);
+			  YAHOO.log ('[YRegion2] new broadcast message: ', this.guid, layer + ":" + msg, o);
 			}
 			/* initializing the child regions */
 			if (this.childs) {
@@ -971,7 +992,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			}
 			return o.flagged;
 		},
-		/*
+		/**
 		 * <p>
 		 * Execute an AJAX command, sending a request to the server, and calling the corresponding callback
 		 * </p>
@@ -1007,7 +1028,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 				}
 			}
 			if (YAHOO.util.Connect) {
-				YAHOO.log ('[YRegion] executing: ', uri, query);
+				YAHOO.log ('[YRegion2] executing: ', uri, query);
 				/* defining the default behavior */
 				c = {
 					success: function(o) {
@@ -1050,7 +1071,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			}
 			return null;
 		},
-		/*
+		/**
 		 * <p>
 		 * Destroy the region object. Only the parent, the application layer, a region that knows this region, or the region itself 
 		 * can destroy the region. 
@@ -1082,12 +1103,13 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			obj.destroyRegion (this);
 		}
 	};
-
-	/*
+	
+	/**
 	 * <p>
 	 * Fire a notification message to a region
 	 * </p>
 	 * @method notify
+	 * @for YRegion2
 	 * @param {String} guid the global unique identifier for a region that should receive the message
 	 * @param {String} layer the name of the message to fire
 	 * @param {Object} o literal object to attach to the message
@@ -1098,7 +1120,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			return _MODS[guid].fire(layer, o);
 		}
 	};
-	/*
+	/**
 	 * <p>
 	 * Fire a broadcast message across all the application
 	 * </p>
@@ -1112,7 +1134,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		  return _bd.broadcast('broadcast', msg, o);
 		}
 	};
-	/*
+	/**
 	 * <p>
 	 * Register a new region definition in the current page
 	 * </p>
@@ -1131,7 +1153,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			_LOADERS[ns].set(c);
 		}
 	};
-	/*
+	/**
 	 * <p>
 	 * Check if a region definition was already registered
 	 * </p>
@@ -1142,7 +1164,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 	obj.isRegion = function (ns) {
 		return _LOADERS.hasOwnProperty(ns);
 	};
-	/*
+	/**
 	 * <p>
 	 * Create a new instance of a region definition based on a configuration object
 	 * </p>
@@ -1157,7 +1179,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			args: [guid, o]
 		});
 	};
-	/*
+	/**
 	 * <p>
 	 * Destroy a instance of a region definition based on a configuration object
 	 * </p>
@@ -1170,10 +1192,10 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		  delete _MODS[conf.guid];
 		} else {
 		  // error: someone is trying the remove a region (only the region itself can do this call)
-		  YAHOO.log ('[YRegion] Someone is trying the remove a region', conf);
+		  YAHOO.log ('[YRegion2] Someone is trying the remove a region', conf);
 		}
 	};
-	/*
+	/**
 	 * <p>
 	 * Clear a instance of a region definition based on a guid
 	 * </p>
@@ -1183,11 +1205,11 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 	 */
 	obj.clearRegion = function (guid) {
 		if (_MODS.hasOwnProperty(guid)) {
-			YAHOO.log ('[YRegion] removing the region manually.', guid);
+			YAHOO.log ('[YRegion2] removing the region manually.', guid);
 			_MODS[guid].destroy ({partial: true});
 		}
 	};
-	/*
+	/**
 	 * <p>
 	 * Register a new plugin definition in the current page
 	 * </p>
@@ -1202,7 +1224,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 			_PLUGINS[name] = plugin;
 		}		
 	};
-	/*
+	/**
 	 * <p>
 	 * Check if a plugin definition was already registered
 	 * </p>
@@ -1213,7 +1235,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 	obj.isPlugin = function (name) {
 		return _PLUGINS.hasOwnProperty(name);
 	};
-	/*
+	/**
 	 * <p>
 	 * Inject/Instantiate a plugin into a global region definition (document.body)
 	 * </p>
@@ -1231,7 +1253,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 	//--------------------------------------
    	//  Begin public interface definition
    	//--------------------------------------	
-	/*
+	/**
      * <p>
      * Searching for an event owner based on the classname, it's similar to the ancestor method but applying the same routine to the node itself
      * </p>
@@ -1250,7 +1272,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		}
 		return node;
     };
-    /*
+    /**
      * <p>
      * Searching for an event owner based on the tagMame, it's similar to the ancestor method but applying the same routine to the node itself
      * </p>
@@ -1271,15 +1293,15 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		return node;
 	};
 	obj.strictMode = true; /* default mode for the URIs in your website */
-	/*
-    * <p>
-    * Augment an url with more parameters, overriding...
-    * </p>
-    * @public
-    * @param {string} url 
-    * @param {string|array} m   an string like this 'param1=value1&param2=value2' or an array like this: {'param1':'value1','param2':'value2'}
-    * @return string
-    */
+	/**
+     * <p>
+     * Augment an url with more parameters, overriding...
+     * </p>
+     * @public
+     * @param {string} url 
+     * @param {string|array} m   an string like a query string or an json object
+     * @return string
+     */
     obj.augmentURI = function( url, m ) {
 		m = m || {};
 	    var o = _parseUri(url, this.strictMode),
@@ -1317,9 +1339,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		}
 		return u;
     };
-	
-	
-	/*
+	/**
      * <p>
      * Analyze all the classes for the node, and getting the list of hooks.
      * </p>
@@ -1334,7 +1354,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		}
 	  	return hooks;
 	};
-	/*
+	/**
      * <p>
      * get the real YUI Button reference from a node element, usually the target for a certain event
      * </p>
@@ -1346,7 +1366,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		node = this.getOwnerByClassName( node, 'yui-button' );
 		return ((node && YAHOO.widget.Button)?YAHOO.widget.Button.getButton(node.get('id')):null);
 	};
-	/*
+	/**
      * <p>
      * Inject JS and/or CSS blocks in the current page
      * </p>
@@ -1384,7 +1404,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 		}
 	};
 	
-	var c = window.YRegion_config || {},
+	var c = window.YRegion2_config || {},
 		root = {
 			ns: 'yregion',
 			require: c.require || [],
@@ -1455,13 +1475,13 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion] Firing a message: ', t
 					this.install ((c.actions || {}));
 				},
 				'click:click': function () {
-					YAHOO.log ('[YRegion] global "click:click": ', arguments);
+					YAHOO.log ('[YRegion2] global "click:click": ', arguments);
 				}
 			},
 			onAvailable: function (f) {
 				var that = this;
 				/* waiting for the document.body element */
-				YAHOO.log ('[YRegion] waiting for the document.body element');
+				YAHOO.log ('[YRegion2] waiting for the document.body element');
 				if (!document.body) {
 					that._handle = setInterval(function() {
 						try {

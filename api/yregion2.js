@@ -1,25 +1,24 @@
 /** 
- * Provides YRegion3 Utility definition based on YUI 3.x.
+ * Provides YRegion2 Utility definition based on YUI 2.x.
  *
- * YRegion3 allows us to define the functionality of different areas (regions) on the page, 
+ * YRegion2 allows us to define the functionality of different areas (regions) on the page, 
  * controlling the events, the loading process of its dependencies and setting a secure scope 
  * to define the region functionality in a consistent way. 
  * 
  * It also creates a communication infrastructure layer among the regions on the page. 
  *
- * @module yregion3
+ * @module yregion2
  */
 
 /**
- * Provides YRegion3 Utility methods.
+ * Provides YRegion2 Utility methods.
  *
- * @class YRegion3
+ * @class YRegion2
  * @static
  */
-YRegion3 = window.YRegion3 || function(){
+YRegion2 = window.YRegion2 || function(){
     var obj = {},
-	    _Y = null,
-		_LOADERS = {},
+	    _LOADERS = {},
 		_MODS = {},
 		_PLUGINS = {},
 		_HASHTABLE = [],
@@ -38,10 +37,11 @@ YRegion3 = window.YRegion3 || function(){
 				}
 		},
 		_waiting = [],
+		_loaderObj = null,
 		_loaderQueue = [],
+		_regionAbstraction = null,
 		_bd = null;
-
-	/**
+   	/**
 	 * Add a list of files to the hash table with the cachable files.
 	 * @method _cache
 	 * @private
@@ -55,6 +55,7 @@ YRegion3 = window.YRegion3 || function(){
 		  _HASHTABLE.push ({fullpath: files[i]});
 		}
 	}
+	
 	/**
 	 * Check if a file object was already cached based in the fullpath
 	 * @method _cached
@@ -104,17 +105,23 @@ YRegion3 = window.YRegion3 || function(){
 	 * @return void
 	 */
 	function _loaderDispatch () {
-		var r;
 		if (_loaderQueue.length > 0) {
-			_Y.log ('[YRegion3] [Loader Queue] loading... ', 'info', _loaderQueue[0]);
-			r = Array.prototype.slice.call(_loaderQueue[0].require, 0);
-			
-			/* inserting the requirements (Y.use) */
-			r.push(function(Y) {
-				_Y.log ('[YRegion3] [Loader Queue] success...', 'info');
-				_loaderNext(true);
-			});
-			_Y.use.apply(_Y, r);
+YAHOO.log ('[YRegion2] [Loader Queue] loading... ', _loaderQueue[0].require);
+			_loaderObj.require(_loaderQueue[0].require);
+			_loaderObj.insert({
+				onSuccess: function() {
+YAHOO.log ('[YRegion2] [Loader Queue] success...');
+					_loaderNext(true);
+				},
+				onFailure: function () {
+YAHOO.log ('[YRegion2] [Loader Queue] failure...');
+					_loaderNext();
+				},
+				onTimeout: function() {
+YAHOO.log ('[YRegion2] [Loader Queue] timeout...');
+					_loaderNext();
+				}
+			}, _loaderQueue[0].type);
 		}
 	}
 	/**
@@ -123,7 +130,7 @@ YRegion3 = window.YRegion3 || function(){
 	 * @method _createMsgObject
 	 * @private
 	 * @static
-	 * @param {Object} e - YUI Event Object.
+	 * @param {Object} e - event reference.
      * @return {Object} the message object with the status and the stopEvent method
 	 */
 	function _createMsgObject (e) {
@@ -131,11 +138,10 @@ YRegion3 = window.YRegion3 || function(){
 			event: e, 
 			flagged: false 
 		};
-		o.target = e.target || _bd.node;
-		o.stopEvent = function () { 
-			o.flagged = true; 
-			e.halt(); // equivalent to: e.stopPropagation() plus e.preventDefault() 
-		};
+		/* YUI 2.x compatibility layer */
+		o.element = YAHOO.util.Event.getTarget(e) || document.body;
+		o.target = new YAHOO.util.Element(o.element);
+		o.stopEvent = function () { o.flagged = true; YAHOO.util.Event.stopEvent(e); };
 		return o;
 	}
 	/**
@@ -148,36 +154,35 @@ YRegion3 = window.YRegion3 || function(){
 	 */
 	function _getSemantic(e) {
 	  e = e || {};
-	  var o = _createMsgObject (e), el;
+	  var o = _createMsgObject (e);
 	  /* analyzing the semantic meaning of the target */
 	  if (o.event && o.target) {
 	  	//o.trigger = obj.getOwnerByTagName(o.target, 'trigger', 5);
 		o.anchor = obj.getOwnerByTagName(o.target, 'A', 5);
 	  	if (!o.yuibutton && !o.anchor) {
-	  		if ((o.target.getAttribute('tagName') == 'INPUT') && (o.input = o.target)) {
-  			} else if ((o.target.getAttribute('tagName') == 'BUTTON') && (o.button = o.target)) {
+	  		if ((o.target.get('tagName') == 'INPUT') && (o.input = o.target)) {
+  			} else if ((o.target.get('tagName') == 'BUTTON') && (o.button = o.target)) {
   			} else {
 				o.select = obj.getOwnerByTagName(o.target, 'SELECT', 2);
   				if (o.select) {
-				  el = _Y.Node.getDOMNode(o.select);
-  				  o.value = el[el.selectedIndex].value;
+  				  o.value = o.select.get('element')[o.select.get('element').selectedIndex].value;
 				}
   			}
 		}
 		/* checking if the target is a yuibutton */
 		if ((o.anchor || o.button) && (o.yuibutton = obj.getYUIButton(o.target))) {
 			o.value = o.yuibutton.get ('value');
-			o.classes = o.yuibutton.getAttribute ('className');
+			o.classes = o.yuibutton.get ('className');
 		}
 		o.trigger = o.trigger || o.anchor || o.yuibutton || o.input || o.select || o.target; /* priority order */
 		if (o.trigger) {
 			o.value = o.value || o.trigger.get('value');
-			o.classes = o.classes || o.trigger.getAttribute('className');
+			o.classes = o.classes || o.trigger.get('className');
 		}
 	  }
 	  return o;
 	}
-	/** 
+	/**
 	 * Parse an string and return the list of hooks
 	 * @method _parseHooks
 	 * @private
@@ -193,7 +198,7 @@ YRegion3 = window.YRegion3 || function(){
 	  }
 	  return hooks;
 	}
-	/** 
+	/**
 	 * Create a new instance of a region.
 	 * @method _initRegion
 	 * @private
@@ -209,8 +214,8 @@ YRegion3 = window.YRegion3 || function(){
 		if (mod.ondomready) {
 			mod.ondomready = false;
 			/* a region can wait until onDOMReady */
-			_Y.on ('domready', function(o) {
-				_Y.log ('[YRegion3] init region on DOMReady: '+guid, 'info');
+			YAHOO.util.Event.onDOMReady (function(o) {
+				YAHOO.log ('[YRegion2] init region on DOMReady: ', guid);
 				obj.initRegion(guid, mod);
 			});
 		} else {
@@ -236,7 +241,7 @@ YRegion3 = window.YRegion3 || function(){
 			}
 		}
 	}
-	/** 
+	/**
 	 * Inject a plugin into the global region represented by "document.body".
 	 * @method _initPlugin
 	 * @private
@@ -247,29 +252,32 @@ YRegion3 = window.YRegion3 || function(){
 	function _initPlugin (name) {
 		_bd.initPlugin(name);
 	}
-	/** 
+	/**
 	 * Inspecting child regions to determine which region owns the target element.
 	 * @method _trickling
 	 * @private
 	 * @static
      * @param {Object} region A Region object reference.
-	 * @param {Node|Object} target A Node instance that represents the target HTMLElement.
+	 * @param {Node} target A Node instance that represents the target.
      * @return {Object} A Region object reference.
      */
 	function _trickling(region, target) {
-		var c, el = target;
-		if (target) {
-			_Y.Object.each(region.childs, function(v, i) {
+		var c, el;
+		if (target && region.childs) {
+			el = target.get ('element');
+			for (c in region.childs) {
 				/* the childs with the lazyload are not ready yet to receive a message */
-				if (!v.lazyload && ((el === v.node) || v.node.test('#'+v.guid+' *'))) {
+				if (region.childs.hasOwnProperty(c) && region.childs[c].guid && (!region.childs[c].lazyload)) {
 					/* comparing the event target with the region container or testing if it's a child element */	
-					return _trickling (v, target);
+					if ((el === region.childs[c].container) || YAHOO.util.Selector.test(el, '#'+region.childs[c].guid+' *')) {
+						return _trickling (region.childs[c], target);
+					}
 				}
-			}, obj, false);
+			}
 		}
 		return region; // chain support
 	}
-	/** 
+	/**
 	 * Parsing an url using strict of loose mode.
 	 * TODO: modify to use strict mode with an static regex
 	 * @method _parseUri
@@ -296,33 +304,50 @@ YRegion3 = window.YRegion3 || function(){
 		});
 		return uri;
 	}
-	/** 
+	/**
+	 * <p>
 	 * Creating an object with the shorthands references.
+	 * </p>
 	 * @method _getShorthands
-	 * @return {Object} A object with the default list of shorthands.
+	 * @private
+	 * @static
+     * @return {Object} A object with the default list of shorthands.
      */
-	function _getShorthands(r) {
+	function _getShorthands() {
 		/* setting the default shorthands */
-		var Y = YUI();
-		return Y.use.apply(Y, r);
+		return {
+			Lang: YAHOO.lang,
+			Event: YAHOO.util.Event,
+			Dom: YAHOO.util.Dom,
+			Y: {
+				Node: {
+					/* this.Y.Node.getDOMNode */
+					getDOMNode: function (node) {
+						return node.get('element');
+					}
+				},
+				Lang: YAHOO.lang,
+				Event: YAHOO.util.Event
+			}
+		};	
 	}
 	
-	/**
-	 * Provides a prototype to control the loading process for an undefined RegionDefinition. A RegionLoader 
-	 * instance controls the loading of a RegionDefinition, and notify to the regions when its definition become available.
-	 * @class RegionLoader3
-	 * @constructor
-	 * @param {String} ns RegionDefinition namespace
-	 * @for YRegion3
-	 * @return {Object} RegionLoader instance
-	 */
-	_modLoader = function (ns) {
+    /**
+ 	 * Provides a prototype to control the loading process for an undefined RegionDefinition. A RegionLoader 
+ 	 * instance controls the loading of a RegionDefinition, and notify to the regions when its definition become available.
+ 	 * @class RegionLoader2
+ 	 * @constructor
+ 	 * @param {String} ns RegionDefinition namespace
+ 	 * @for YRegion2
+ 	 * @return {Object} RegionLoader instance
+ 	 */
+ 	var _modLoader = function (ns) {
 		this.ns = ns;
 	};
 	_modLoader.prototype = {
-		/** 
+		/**
 		 * <p>
-		 * loading the Region Definition
+		 * Load a Region Definition
 		 * </p>
 		 * @method load
 		 * @param {String} uri URL to load a file on demand (js or css)
@@ -333,13 +358,14 @@ YRegion3 = window.YRegion3 || function(){
 			callback = callback || {};
 			// loading the definition for the region
 			if (this._debug) {
+				/* YAHOO.log ('this block is for debuging') */
 				uri += ((uri.indexOf('?') == -1)?'?':'&') + "rnd=" + new Date().valueOf().toString();
 			}
-			return _Y.io.script(uri, callback);
+			return YAHOO.util.Get.script(uri, callback);
 		},
-		/** 
+		/**
 		 * <p>
-		 * setting the Region Definition, when a new region definition is included in the current page,
+		 * Set a Region Definition, when a new region definition is included in the current page,
 		 * these method will be executed to notify to everybody that a new region definition is ready.
 		 * </p>
 		 * @method set
@@ -348,14 +374,14 @@ YRegion3 = window.YRegion3 || function(){
 		 */
 		set: function (mod) {
 			/* the new region definition should inherit from generic region */
-			_Y.aggregate(mod, _regionAbstraction);
+			YAHOO.lang.augmentObject(mod, _regionAbstraction);
 			this._mod = mod;
 			// finally, notifying everybody that the region definition is ready
 		    this.notify();
 		},
-		/** 
+		/**
 		 * <p>
-		 * creating a new instance, inheriting the region definition methods.
+		 * Create a new instance, inheriting the region definition methods.
 		 * </p>
 		 * @method create
 		 * @param {Object} mod Instance of the new region.
@@ -363,15 +389,19 @@ YRegion3 = window.YRegion3 || function(){
 		 */
 		create: function (mod) {
 			/* mod is an instance of the this._mod */
-			_Y.aggregate(mod, this._mod);
+			// actions will be merged
+			mod.actions = mod.actions || {};
+			YAHOO.lang.augmentObject(mod.actions, (this._mod.actions || {}));
+			// the rest of the properties will be injected. Properties of the instance will not be override
+			YAHOO.lang.augmentObject(mod, this._mod);
 			// storing the region instance reference
 			_MODS[mod.guid] = mod;
 			/* initializing the region instance */
 			mod.init();
 		},
-		/** 
+		/**
 		 * <p>
-		 * subscribing a new instance to this region definition, when the class become available, the 
+		 * Subscribe a new instance to this region definition, when the class become available, the 
 		 * subscriber will get a notification.
 		 * </p>
 		 * @method subscribe
@@ -387,9 +417,9 @@ YRegion3 = window.YRegion3 || function(){
 				this.notify ();
 			}
 		},
-		/** 
+		/**
 		 * <p>
-		 * notifying to all the subscribers that the region definition is ready, this process will 
+		 * Notify to all the subscribers (queue of regions) that the region definition is ready, this process will 
 		 * garranty that this region instances will be instantiated after the class become available.
 		 * </p>
 		 * @method notify
@@ -398,7 +428,7 @@ YRegion3 = window.YRegion3 || function(){
 		notify: function () {
 			var l;
 			/* firing each listener */
-			if (_Y.Lang.isArray(this._instances)) {
+			if (YAHOO.lang.isArray(this._instances)) {
 			  while ((l = this._instances.pop())) {
 				this.create (l);
 			  }
@@ -408,23 +438,30 @@ YRegion3 = window.YRegion3 || function(){
 	
 	/**
 	 * Provides a set of generic methods that each region instance inherits automatically.
-	 * @class RegionDefinition3
+	 * @class RegionDefinition2
 	 * @static
-	 * @for YRegion3
+	 * @for YRegion2
 	 */
 	_regionAbstraction = {
+		/**
+		 * <p>
+		 * execute the internal initialization process for the region
+		 * </p>
+		 * @method init
+		 * @return {Object} region reference to support chaining
+		 */
 		init: function () {
-		    _Y.log ('[YRegion3] creating: '+this.guid, 'info');
+		    YAHOO.log ('[YRegion2] creating: ', this.guid);
 			var f, i, files = [], r, l, that = this;
 			/* filtering get and post arguments for the server side */
 			this.getargs = (this.getargs?this.getargs:{});
 			this.postargs = (this.postargs?this.postargs:{});
-			_Y.log ('[YRegion3] decoding server (get and post) arguments: '+this.guid, 'info', this);
+			YAHOO.log ('[YRegion2] decoding server (get and post) arguments: ', this.getargs, this.postargs);
 		    // starting the loading routine for the dependencies...
 			// loading the requiredments
-		    this.require = this.require || [];
-			// getting the official list to load
-			r = Array.prototype.slice.call(this.require, 0);
+		    r = Array.prototype.slice.call((this.require || []), 0);
+			// injecting the default list of requirements 
+			r.push("event", "dom", "element", "selector", "connection");
 			// checking cache for the includes
 			this.dependencies = this.dependencies || [];
 			// cheching the uri in the hashtable
@@ -436,77 +473,94 @@ YRegion3 = window.YRegion3 || function(){
 				}
 				if (f.fullpath && (!_cached(f))) {
 					if (this._debug) {
+						/* YAHOO.log ('this block is for debuging') */
 						f.fullpath += ((f.fullpath.indexOf('?') == -1)?'?':'&') + "rnd=" + new Date().valueOf().toString();
-						}
-						files.push (f.fullpath);
 					}
+					files.push (f.fullpath);
 				}
-_Y.log ('[YRegion3] loading the requirements: '+this.guid, 'info', r);
+			}
+			YAHOO.log ('[YRegion2] loading the requirements: ', this.guid, r);
 			f = function () {
-				_Y.log ('[YRegion3] the DOM element for the region is ready: '+that.guid, 'info', that);
+				var el = this;
+				that.container = el;
+				YAHOO.log ('[YRegion2] the DOM element for the region is ready: ', el);
 				/* if the region have a wrapper, we can assume that we need to create the container within that wrapper */
-					if (that.wrapper) {
-_Y.log ('[YRegion3] creating the container for the area: '+that.guid, 'info', that);
-					that.addToBody({
+				if (that.wrapper) {
+					YAHOO.log ('[YRegion2] creating the container for the area: ', that.guid, el);
+					this.addToBody({
 						attributes: {
 							id: that.guid
 						}
-					}, this);
+					}, el);
+					that.container = YAHOO.util.Selector.query('#'+that.guid, el, true);
 				}
 				/* if the region is an AJAX region, it shoult be loaded dynamically using YUI Connection Manager */
-					if (that.ajax) {
-_Y.log ('[YRegion3] init an AJAX region', 'info');
+				if (that.ajax) {
+					YAHOO.log ('[YRegion2] init an AJAX region');
 					/* we shoudl use ajax to load the content of the region */
-					//_Y.aggregate(that, _getShorthands(that.require));
+					YAHOO.lang.augmentObject(that, _getShorthands());
 					that.execute('render', {}, function(o) {
-						that.node.set('innerHTML', o.response);
+						that.container.innerHTML = o.response;
 						that.ready();
 					});
 				} else {
 					that.ready();
 				}
 			};
+			/* creating the loader object for this region */
+			l = this._loader = this._loader || {};
+			l.combine = (l.hasOwnProperty('combine')?l.combine:true); /* using the Combo Handle */
+			l.combine = !this._debug;
+		    l.filter = l.filter || 'min';  /* you can switch between YUI branch */
+			l.filter = (this._debug?'debug':l.filter);
+			
+			_loaderObj = _loaderObj || new YAHOO.util.YUILoader(l);
 			
 			// finally, executing the ready method
 			this.include(r, files, function () {
-				that.available (f);
+				that.onAvailable (f);
 			});
 			return this; /* chaining */
 		},
-		available: function (f) {
-			var that = this;
-			/* inserting the default requirements (Y.use) */
-			that.require.push("event", "node", function() {
-				/* waiting until the body element become available, probably we should wait until domready instead  */
-				that.waiting(f);
-			});
-			/* creating the custom loader object. 
-			 * - In theory this initialization process doesn't need to load any file, because
-			 *   the files were already loaded, so the intension is to create Y obj with the custom requirements, 
-			 *   instead of using the whole set of available components. so _Y <> Y 
-			 */
-			that.Y = YUI();
-			console.log (that.require);
-			that.Y.use.apply(that.Y, that.require);
-			return that; /* chaining */
-		},
-		waiting: function (f) {
-			this.node = this.get ('#'+this.guid);
-			/* if the wrapper exists, we should wait until the wrapper become available */
-			var n = (this.wrapper?this.get('#'+this.wrapper):this.node);
-			_Y.log ('[YRegion3] the dependencies are ready, now we need to wait for the DOM element: '+ this.guid, 'info', n);
-			if (n) {
-				n.on('available', f);
+		/**
+		 * <p>
+		 * Waiting until the DOM element that represents the region become available
+		 * </p>
+		 * @method onAvailable
+		 * @param {Function} f a function to call when the DOM element that represent the region become available
+		 * @return {Object} region reference to support chaining
+		 */
+		onAvailable: function (f) {
+			/* no wrapper or the wrapper is an ID, we should wait until the guid or the wrapper become available */
+			var c = this.wrapper || this.guid, el;
+			YAHOO.log ('[YRegion2] the dependencies are ready, now we need to wait for the DOM element: ', this.guid, c);
+			if (YAHOO.util.Dom.inDocument(c) && (el = YAHOO.util.Dom.get(c))) {
+			  YAHOO.log ('[YRegion2] [onAvailable] the element is already in the DOM', c);
+			  f.apply (el, []);
+			} else {
+			  YAHOO.log ('[YRegion2] [onAvailable] Using YUI Event onAvailable to wait for the element', c);
+			  YAHOO.util.Event.onAvailable (c, f);
 			}
+			return this; /* chaining */
 		},
+		/**
+		 * <p>
+		 * get the region ready when all the requiredment, dependencies and DOM element available
+		 * </p>
+		 * @method ready
+		 * @return {Object} region reference to support chaining
+		 */
 		ready: function () {
 			var c, i, that = this;
-			this.node.setAttribute('id', this.guid);
+			if (this.guid=='yregion') {
+				this.container = document.body;
+				this.container.id = this.guid;
+			}
 			/* expending with the shorthands */
-			//_Y.aggregate(this, _getShorthands(this.require));
+			YAHOO.lang.augmentObject(this, _getShorthands());
 			/* checking for the plugins: installing them if needed */
 			this.install (this.actions);
-			if (_Y.Lang.isArray(this.plugins)) {
+			if (YAHOO.lang.isArray(this.plugins)) {
 				for (i=0;i<this.plugins.length;i++) {
 				  this.initPlugin (this.plugins[i]);
 				}
@@ -515,43 +569,70 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			if (this.parentRegion) {
 				this.parentRegion.setChild (this);
 			}
+			this.node = new YAHOO.util.Element(this.container);
 			this.node.addClass (_region_class);
 			/* initializing the child regions */
-			
-			_Y.Object.each(that.childs, function(v, i) {
-				/* the childs with the lazyload should be loaded manually */
-				if (!v.lazyload) {
-					that.initChild(i, v);
+			if (this.childs) {
+				for (c in this.childs) {
+					if (this.childs.hasOwnProperty(c) && (!this.childs[c].lazyload)) {
+						/* the childs with the lazyload should be loaded manually */
+						this.initChild (c, this.childs[c]);
+					}
 				}
-			}, that, false);
-			
+			}
 			this.fire('region:ready');
-			
-			_Y.on('contentready', function () {
-				_Y.log ('[YRegion3] region is ready to be expanded: '+ that.guid, 'info');
+			YAHOO.util.Event.onContentReady (this.guid, function () {
+				YAHOO.log ('[YRegion2] region is ready to be expanded: ', that.guid);
 				that.fire('region:contentready');
 				/* also, yregion support integration with unit test */
 				that.fire('test:ready');
-			}, '#'+this.guid, this);
-			
+			});
 			return this; /* chaining */
 		},
+		/**
+		 * <p>
+		 * plug all the actions defined by a plugin within the region
+		 * </p>
+		 * @method install
+		 * @param {Object} plugin a object with the plugin definition
+		 * @return {Object} region reference to support chaining
+		 */
 		install: function (plugin) {
-			var that = this;
-			_Y.Object.each(plugin, function(v, i) {
-				that.on(i, v);
-				_Y.log ('[YRegion3] adding a new message: '+ that.guid, 'info', i);
-			}, that, false);
+			var a;
+			if (plugin) {
+				for (a in plugin) {
+					if (plugin.hasOwnProperty(a)) {
+						this.on(a, plugin[a]);
+						YAHOO.log ('[YRegion2] adding a new message: ', this.guid, a);
+					}
+				}
+			}
 			return this; /* chaining */
 		},
+		/**
+		 * <p>
+		 * inject a plugin within the region
+		 * </p>
+		 * @method initPlugin
+		 * @param {String} name the plugin that should be injected within the region
+		 * @return {Object} region reference to support chaining
+		 */
 		initPlugin: function (name) {
 			if (_PLUGINS.hasOwnProperty(name)) {
 			  this.install(_PLUGINS[name]);
 		    } else {
-			  _Y.log ('[YRegion3] error adopting a unknown plugin: '+name, 'info');
+			  YAHOO.log ('[YRegion2] error adopting a unknown plugin:', name);
 		    }
 			return this; /* chaining */
 		}, 
+		/**
+		 * <p>
+		 * insert a set of YUI Modules and execute a callback method. The last argument in the list is the callback function
+		 * </p>
+		 * @method use
+		 * @param {Array} Arguments
+		 * @return {Object} region reference to support chaining
+		 */
 		use: function () {
 			var a=Array.prototype.slice.call(arguments, 0),
 				callback = a.pop ();
@@ -572,40 +653,58 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			}
 			return this; /* chaining */
 		},
+		/**
+		 * <p>
+		 * include a set or requirements and dependencies before intanciate the region
+		 * </p>
+		 * @method include
+		 * @param {Array} mods set of YUI modules that most be included in the current page
+		 * @param {Array} files set of files that should be included in the current page
+		 * @param {Function} callback a function to call when the YUI modules and the files get loaded
+		 * @return {Object} region reference to support chaining
+		 */
 		include: function (mods, files, callback) {
 			var f = Array.prototype.slice.call(files, 0),
 				that = this;
 			if (callback) {
 			  mods.push (function(M) {
 				// loading the inclusions
-				_Y.log ('[YRegion3] the requirements are ready, now we need to load the dependencies: '+that.guid, 'info', f );
-				if (_Y.Lang.isArray(f) && (f.length > 0)) {
-					_Y.Get.script(f, { 
+				YAHOO.log ('[YRegion2] the requirements are ready, now we need to load the dependencies: ', f );
+				if (YAHOO.lang.isArray(f) && (f.length > 0)) {
+					YAHOO.util.Get.script(f, { 
 					  onSuccess: function(o) {
 						_cache(files);
+						o.purge(); //removes the script node immediately after executing;
 						// everything is ready...
 						callback.apply (that, []);
 					  },
-					  onFailure: {},
-					  autopurge: true //removes the script node immediately after executing;
+					  onFailure: {}
 					});
-				} else {
-					// everything is ready...
-					callback.apply (that, []);
-				} 
+					} else {
+						// everything is ready...
+						callback.apply (that, []);
+					} 
 			  });
 			  this.use.apply (that, mods);
 			}
 			return this; /* chaining */
 		},
+		/**
+		 * <p>
+		 * Set a new content for node element within the region
+		 * </p>
+		 * @method setContent
+		 * @param {String} xpath a selector to localize an node element within the region
+		 * @param {String|Object} bd the string to be set as a content of the node
+		 * @return {Object} region reference to support chaining
+		 */
 		setContent: function (xpath, bd) {
-			/* by default we should use the node element for the region */
-			bd = bd || this.node;
-			var el =  _Y.Selector.query(xpath, _Y.Node.getDOMNode(_Y.get(bd)), true); 
+			// {@caridy: TODO: apply the guid filter to this selector as well}
+			var el = YAHOO.util.Selector.query(xpath, this.container, true); 
 			if (el) {
 				// purge the child elements and the events attached...
 				for (var i=0;i<el.childNodes.length;i++) {
-				  _Y.Event.purgeElement ( el.childNodes[i], true );
+				  this.Event.purgeElement ( el.childNodes[i], true );
 				}
 				el.innerHTML = bd;
 				this.bubbling ('region', 'contentchange', {
@@ -613,16 +712,24 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 				});
 			}
 			else { 
-				_Y.log ('[YRegion3] Invalid Selector: ', 'info', xpath); 
+				YAHOO.log ('[YRegion2] Invalid Selector: ', xpath); 
 			}
 			return this; /* chaining */
 		},
+		/**
+		 * <p>
+		 * Set a new content for the region
+		 * </p>
+		 * @method setBody
+		 * @param {String|Object} bd the string to be set as a content of the region
+		 * @return {Object} region reference to support chaining
+		 */
 		setBody: function (bd) {
-			var el = _Y.Node.getDOMNode(this.node);
-			if (el) {
+			var el = this.container, i;
+			if (el && this.Dom.inDocument(el)) {
 				// purge the child elements and the events attached...
 				for (i=0;i<el.childNodes.length;i++) {
-				  _Y.Event.purgeElement ( el.childNodes[i], true );
+				  this.Event.purgeElement ( el.childNodes[i], true );
 				}
 				this.node.set('innerHTML', bd);
 				this.bubbling ('region', 'contentchange', {
@@ -631,13 +738,22 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			}
 			return this; /* chaining */
 		},
+		/**
+		 * <p>
+		 * Add a new DOM structure (content or DOM representation) into the region or a node element within the region
+		 * </p>
+		 * @method addToBody
+		 * @param {String|Object} bd an string or a object that represent a DOM element thru a literal
+		 * @param {Node} mod configuration object for the child region that should be initialized.
+		 * @return {Object} region reference to support chaining
+		 */
 		addToBody: function (bd, n) {
 			var o, a;
-			if (_Y.Lang.isString(bd)) {
+			if (this.Lang.isString(bd)) {
 				bd = {innerHTML: bd};
 			}
 			n = n || this.node;
-			_Y.aggregate(bd, {type: 'div', attributes: {}, innerHTML: ''});
+			this.Lang.augmentObject(bd, {type: 'div', attributes: {}, innerHTML: ''});
 			if (bd) {
 				o = document.createElement(bd.type);
 				/* adding attributes */
@@ -654,6 +770,15 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			}
 			return this; /* chaining */
 		},
+		/**
+		 * <p>
+		 * Init a child region instance
+		 * </p>
+		 * @method initChild
+		 * @param {String} guid the global unique identifier for a child region
+		 * @param {Object} mod configuration object for the child region that should be initialized.
+		 * @return {Object} region reference to support chaining
+		 */
 		initChild: function (guid, mod) {
 			mod = mod || {};
 			mod.parentRegion = this;
@@ -661,6 +786,14 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			obj.initRegion (guid, mod);
 			return this; /* chaining support */
 		},
+		/**
+		 * <p>
+		 * Wake a child region, initializing a lazyload region instance
+		 * </p>
+		 * @method wakeChild
+		 * @param {String} guid the global unique identifier for a child region
+		 * @return {Object} region reference to support chaining
+		 */
 		wakeChild: function (guid) {
 			if (guid && this.childs.hasOwnProperty(guid) && this.childs[guid].lazyload) {
 				this.initChild (guid, this.childs[guid]);
@@ -669,11 +802,11 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 		},
 		/**
 		 * <p>
-		 * setting a new child for the current region.
+		 * Set a new child for the current region.
 		 * </p>
 		 * @method setChild
-		 * @param {Object} mod reference to a certain region.
-		 * @return {Object}
+		 * @param {Object} mod configuration object for a new child region.
+		 * @return {Object} region reference to support chaining
 		 */
 		setChild: function (mod) {
 			this.childs = this.childs || {};
@@ -688,7 +821,7 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 		 * </p>
 		 * @method getChild
 		 * @param {String} guid for a child region.
-		 * @return {Object}
+		 * @return {Object} a reference to a child region
 		 */
 		getChild: function (guid) {
 			return ((this.childs && this.childs.hasOwnProperty(guid))?this.child[guid]:null);
@@ -699,24 +832,24 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 		 * </p>
 		 * @method get
 		 * @param {String} xpath for the desired element.
-		 * @param {Object} node only if you want to be more specific, using this node as the root element for the search.
-		 * @return {Object}
+		 * @param {Node} node only if you want to be more specific, using this node as the root element for the search.
+		 * @return {Node} the first node element for the specific query
 		 */
 		get: function (xpath, node) {
 			node = node || this.node;
-			var el = _Y.Selector.query(xpath, _Y.Node.getDOMNode(node), true); 
-			return (el?_Y.get(el):null);
+			var el = YAHOO.util.Selector.query(xpath, node.get('element'), true); 
+			return (el?new YAHOO.util.Element(el):null);
 		},
 		/**
 		 * Return the visualization properties for the current region
-		 * 
+		 *
 		 * The viewport obj looks like this: 
 		 * <p>
 		 * {x:10, y:10, width: 10, height: 10, ... }
 		 * </p>
-		 *
+		 * 
 		 * @method getViewport
-		 * @return {object} the literal object with the par {x:10, y:10, width: 10, height: 10, .... }
+		 * @return {Object} the literal object with the viewport properties 
 		 */
 		getViewport: function () {
 			var el = this.container,
@@ -744,7 +877,7 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 		 * @return {object} region reference to support chaining
 		 */
 		setViewport: function (o) {
-			var f = _Y.Dom.setStyle, s;
+			var f = this.Dom.setStyle, s;
 			o = o || {};
 			for (s in o) {
 				if (o.hasOwnProperty(s)) {
@@ -753,19 +886,46 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			}
 			return this; /* chaining support */
 		},
+		/**
+		 * Set a new listener for an specific message
+		 * @method on
+		 * @param {String} layer the name of the message to listen for
+		 * @param {Function} listener callback function
+		 * @param {Object} args literal object that you want to use when this listener get executed
+		 * @return {object} region reference to support chaining
+		 */
 		on: function (layer, listener, args) {
-			this._actions = this._actions || new this.Y.Event.Target();
-			this._actions.publish(layer);
-			this._actions.subscribe(layer, listener, this, args);
+			this.listeners = this.listeners || {};
+			if (!this.listeners.hasOwnProperty(layer)) {
+				this.listeners[layer] = new YAHOO.util.CustomEvent(layer, this);
+			}
+			this.listeners[layer].subscribe (listener, args);
 			return this; /* chaining */
 		},
+		/**
+		 * Fire a message across the region
+		 * @method fire
+		 * @param {String} layer the name of the message to fire
+		 * @param {Object} o literal object to attach to the message
+		 * @return {boolean} the execution result, true if a listener stop the execution.
+		 */
 		fire: function (layer, o) {
 			o = o || {};
-			if (this._actions) {
-				this._actions.fire (layer, o);
+			if (this.listeners && this.listeners.hasOwnProperty(layer)) {
+if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion2] Firing a message: ', this.guid, layer, o); }
+				this.listeners[layer].fire (o);
 			}
 			return o.flagged;
 		},
+		/**
+		 * <p>
+		 * Sign a set of arguments based on a flagged property. If another listener had claim the message,
+		 * setting the flagged to true, which means that no other listener should consume this message.
+		 * </p>
+		 * @method signature
+		 * @param {Object} args literal object to sign
+		 * @return {Object} the literal object with the signed arguments, null if the signing process fail.
+		 */
 		signature: function (args) {
 			var a = (args[1]?args[1][0]:null);
 			/* checking the current status for this event, it's the event was already stopped, the response is null */
@@ -787,14 +947,11 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 		bubbling: function (layer, msgs, o, flag) {
 			o = o || {};
 			o.layer = layer;
-			msgs = (_Y.Lang.isArray(msgs)?msgs:[msgs]);
+			msgs = (this.Lang.isArray(msgs)?msgs:[msgs]);
 			if (!flag) { /* there is not need to send the messages for the current region */
 			  for (var i=0; i<msgs.length; i++) {
 				if (layer != 'mouse') {
-				  _Y.log ('[YRegion3] new bubbling up message: '+ layer + ":" + msgs[i], 'info', {
-						msg: o,
-						emisor: this
-					});
+				  YAHOO.log ('[YRegion2] new bubbling up message: ', this.guid, layer + ":" + msgs[i], o);
 				}
 				this.fire(layer + ":" + msgs[i], o);
 			  }
@@ -820,11 +977,8 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			o.layer = layer;
 			o.flagged = false; /* you can't stop a broadcast message */
 			if (!flag) { /* there is not need to send the messages for the current region */
-			  	this.fire(layer + ":" + msg, o);
-			  	_Y.log ('[YRegion3] new broadcast message: '+layer + ":" + msg, 'info', {
-					msg: o,
-					emisor: this
-				});
+			  this.fire(layer + ":" + msg, o);
+			  YAHOO.log ('[YRegion2] new broadcast message: ', this.guid, layer + ":" + msg, o);
 			}
 			/* initializing the child regions */
 			if (this.childs) {
@@ -838,6 +992,16 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			}
 			return o.flagged;
 		},
+		/**
+		 * <p>
+		 * Execute an AJAX command, sending a request to the server, and calling the corresponding callback
+		 * </p>
+		 * @method execute
+		 * @param {String} command the value for the command object passed thru the AJAX request as GET (command=value)
+		 * @param {Object} args Literal object with a set of post argument to send thru the AJAX request.
+		 * @param {Object} callback a function or an object that represent a callback for the AJAX request.
+		 * @return {Object} a YUI Connection Manager handle object.
+		 */
 		execute: function (command, args, callback) {
 			var query = '', a,
 				uri = '/ajax/'+this.ns+'/ws',
@@ -846,7 +1010,7 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 				getargs = {},
 				c, h;
 			/* builing the get arguments */
-			_Y.Lang.augmentObject(getargs, this.getargs, true);
+			this.Lang.augmentObject(getargs, this.getargs, true);
 			getargs.guid = this.guid; /* adding the guid as a get argument */
 			getargs.command = command; /* adding the command as a get argument */
 			/* using a custom ws url */
@@ -856,18 +1020,15 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			uri = obj.augmentURI (uri, getargs);
 			/* builing the post arguments */
 			args = args || {};
-			_Y.Lang.augmentObject(postargs, this.postargs, true);
-			_Y.Lang.augmentObject(postargs, args, true);
+			this.Lang.augmentObject(postargs, this.postargs, true);
+			this.Lang.augmentObject(postargs, args, true);
 			for (a in postargs) {
 				if (postargs.hasOwnProperty(a)) {
 					query += (query===''?'':'&')+a+'='+postargs[a];
 				}
 			}
 			if (YAHOO.util.Connect) {
-				_Y.log ('[YRegion3] executing: '+ uri, 'info', {
-					msg: o,
-					emisor: this
-				});
+				YAHOO.log ('[YRegion2] executing: ', uri, query);
 				/* defining the default behavior */
 				c = {
 					success: function(o) {
@@ -887,11 +1048,11 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 						});
 					}
 				};
-				if (_Y.Lang.isFunction(callback)) {
+				if (this.Lang.isFunction(callback)) {
 					c.success = function(o) {
 						callback.apply (that, [o]);
 					};
-				} else if (_Y.Lang.isObject(callback) && callback) {
+				} else if (this.Lang.isObject(callback) && callback) {
 					/* the callback is an object */
 					c = callback;
 				}			
@@ -908,10 +1069,18 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 				/* returning the transaction ID */
 				return h;
 			}
-			return false;
+			return null;
 		},
+		/**
+		 * <p>
+		 * Destroy the region object. Only the parent, the application layer, a region that knows this region, or the region itself 
+		 * can destroy the region. 
+		 * </p>
+		 * @method destroy
+		 * @param {Object} arg Literal object with more information about the destroy action.
+		 * @return void
+		 */
 		destroy: function (args) {
-			// TODO:
 			args = args || {};
 			this.fire('region:destroy', args);
 			if (this.container) {
@@ -934,19 +1103,46 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			obj.destroyRegion (this);
 		}
 	};
-		
-	/* global methods */
-	obj.notify = function (guid, msg, args) {
+	
+	/**
+	 * <p>
+	 * Fire a notification message to a region
+	 * </p>
+	 * @method notify
+	 * @for YRegion2
+	 * @param {String} guid the global unique identifier for a region that should receive the message
+	 * @param {String} layer the name of the message to fire
+	 * @param {Object} o literal object to attach to the message
+	 * @return {boolean} the execution result, true if a listener stop the execution.
+	 */
+	obj.notify = function (guid, layer, o) {
 		if (guid && _MODS.hasOwnProperty(guid)) {
-			return _MODS[guid].fire(msg, args);
+			return _MODS[guid].fire(layer, o);
 		}
 	};
+	/**
+	 * <p>
+	 * Fire a broadcast message across all the application
+	 * </p>
+	 * @method broadcast
+	 * @param {String} msg the name of the message to fire
+	 * @param {Object} o literal object to attach to the message
+	 * @return {boolean} the execution result, true if a listener stop the execution.
+	 */
 	obj.broadcast = function (msg, o) {
 		if (_bd) {
 		  return _bd.broadcast('broadcast', msg, o);
 		}
 	};
-	/* regions */
+	/**
+	 * <p>
+	 * Register a new region definition in the current page
+	 * </p>
+	 * @method setRegionDefinition
+	 * @param {String} ns namespace for the region definition
+	 * @param {Object} c region definition
+	 * @return void
+	 */
 	obj.setRegionDefinition = function (ns, c) {
 		if (!_LOADERS.hasOwnProperty(ns)) {
 			// registering the new region
@@ -957,40 +1153,96 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			_LOADERS[ns].set(c);
 		}
 	};
+	/**
+	 * <p>
+	 * Check if a region definition was already registered
+	 * </p>
+	 * @method isRegion
+	 * @param {String} ns namespace for the region definition
+	 * @return {Boolean} Whether or not the region definition was registered.
+	 */
 	obj.isRegion = function (ns) {
 		return _LOADERS.hasOwnProperty(ns);
 	};
-	obj.initRegion = function (guid, mod) {
+	/**
+	 * <p>
+	 * Create a new instance of a region definition based on a configuration object
+	 * </p>
+	 * @method initRegion
+	 * @param {String} guid global unique identifier (div->id) for the new region instance
+	 * @param {Object} conf a region instance configuration object
+	 * @return void
+	 */
+	obj.initRegion = function (guid, conf) {
 		_waiting.push ({
 			method: 'initRegion',
-			args: [guid, mod]
+			args: [guid, o]
 		});
 	};
-	obj.destroyRegion = function (mod) {
-		if (mod && mod.guid && mod.ns && _MODS.hasOwnProperty(mod.guid) && (mod === _MODS[mod.guid])) {
-			delete _MODS[mod.guid];
+	/**
+	 * <p>
+	 * Destroy a instance of a region definition based on a configuration object
+	 * </p>
+	 * @method destroyRegion
+	 * @param {Object} conf a region instance configuration object
+	 * @return void
+	 */
+	obj.destroyRegion = function (conf) {
+		if (conf && conf.guid && conf.ns && _MODS.hasOwnProperty(conf.guid) && (conf === _MODS[conf.guid])) {
+		  delete _MODS[conf.guid];
 		} else {
 		  // error: someone is trying the remove a region (only the region itself can do this call)
-		  return;
+		  YAHOO.log ('[YRegion2] Someone is trying the remove a region', conf);
 		}
 	};
-	
+	/**
+	 * <p>
+	 * Clear a instance of a region definition based on a guid
+	 * </p>
+	 * @method clearRegion
+	 * @param {String} guid global unique identifier (div->id) for the region instance
+	 * @return void
+	 */
 	obj.clearRegion = function (guid) {
 		if (_MODS.hasOwnProperty(guid)) {
-			_Y.log ('[YRegion3] removing the region manually.', 'info');
+			YAHOO.log ('[YRegion2] removing the region manually.', guid);
 			_MODS[guid].destroy ({partial: true});
 		}
 	};
-	/* plugins */
+	/**
+	 * <p>
+	 * Register a new plugin definition in the current page
+	 * </p>
+	 * @method setPluginDefinition
+	 * @param {String} name the name of the plugin
+	 * @param {Object} plugin an object with the plugin definition
+	 * @return void
+	 */
 	obj.setPluginDefinition = function (name, plugin) {
 		if (!_PLUGINS.hasOwnProperty(name)) {
 			// registering the new plugin
 			_PLUGINS[name] = plugin;
 		}		
 	};
+	/**
+	 * <p>
+	 * Check if a plugin definition was already registered
+	 * </p>
+	 * @method isPlugin
+	 * @param {String} name the name of the plugin to verify
+	 * @return {Boolean} Whether or not the plugin definition was registered.
+	 */
 	obj.isPlugin = function (name) {
 		return _PLUGINS.hasOwnProperty(name);
 	};
+	/**
+	 * <p>
+	 * Inject/Instantiate a plugin into a global region definition (document.body)
+	 * </p>
+	 * @method initPlugin
+	 * @param {String} name the name of the plugin to be injected into the global region
+	 * @return void
+	 */
 	obj.initPlugin = function (name) {
 		_waiting.push ({
 			method: 'initPlugin',
@@ -1006,17 +1258,17 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
      * Searching for an event owner based on the classname, it's similar to the ancestor method but applying the same routine to the node itself
      * </p>
      * @method getOwnerByClassName
-     * @param {HTMLElement} node The html element.
+     * @param {Node} node The Node element.
      * @param {String} className the class name to search for
-     * @param {String} level the analyzis level, for performance you should try to find the ancestor within a range of levels
-     * @return {HTMLElement | null} The matching DOM node or null if none found.
+     * @param {Integer} level the analyzis level, for performance you should try to find the ancestor within a range of levels
+     * @return {Node} The matching DOM node or null if none found.
      */
 	obj.getOwnerByClassName = function(node, className, level) {
-		var fn = function(n) { 
-			return n.hasClass(className); 
-		};
-		if (node && !node.hasClass(className)) {
-			return node.ancestor( fn );
+		var el;
+		if (!node) { return null; }
+		if (!node.hasClass(className)) {
+			el = YAHOO.util.Dom.getAncestorByClassName (node.get('element'), className);
+			node = (el?new YAHOO.util.Element(el):null);
 		}
 		return node;
     };
@@ -1025,46 +1277,29 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
      * Searching for an event owner based on the tagMame, it's similar to the ancestor method but applying the same routine to the node itself
      * </p>
      * @method getOwnerByTagName
-     * @param {HTMLElement} node The html element.
+     * @param {Node} node The Node element.
      * @param {String} tagName the tagName to search for
-     * @param {String} level the analyzis level, for performance you should try to find the ancestor within a range of levels
-     * @return {HTMLElement | null} The matching DOM node or null if none found.
+     * @param {Integer} level the analyzis level, for performance you should try to find the ancestor within a range of levels
+     * @return {Node} The matching DOM node or null if none found.
      */
 	obj.getOwnerByTagName = function(node, tagName, level) {
 		tagName = tagName.toUpperCase();
-		var fn = function(n) { 
-			return (n.get('tagName').toUpperCase()==tagName); 
-		};
-		if (node && !fn(node)) {
-			return node.ancestor( fn );
+		if (!node) { return null; }
+		var el, t = node.get('tagName');
+		if (t.toUpperCase() != tagName) {
+			el = YAHOO.util.Dom.getAncestorByTagName (node.get('element'), tagName);
+			node = (el?new YAHOO.util.Element(el):null);
 		}
 		return node;
 	};
-    /*
-     * <p>
-     * Testing is the node element is child of ancestor element
-     * </p>
-     * @method getOwnerByTagName
-     * @param {HTMLElement} node The html element.
-     * @param {HTMLElement} ancestor The ancestor html element.
-     * @param {String} level the analyzis level, for performance you should try to find the ancestor within a range of levels
-     * @return {HTMLElement | null} The matching DOM node or null if none found.
-     */
-	obj.isAncestor = function(node, ancestor, level) {
-		var fn = function(n) { 
-			return (n===ancestor); 
-		};
-		if (node && ancestor) {
-			return node.ancestor( fn );
-		}
-		return false;
-	};
 	obj.strictMode = true; /* default mode for the URIs in your website */
 	/**
-    * augment an url with more parameters, overriding...
+    * <p>
+    * Augment an url with more parameters, overriding...
+    * </p>
     * @public
     * @param {string} url 
-    * @param {string|array} m   an string like a querystring or an json object
+    * @param {string|array} m   an string like a query string or an json object
     * @return string
     */
     obj.augmentURI = function( url, m ) {
@@ -1072,7 +1307,7 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 	    var o = _parseUri(url, this.strictMode),
 	        u = '';
 		o.queryKey = o.queryKey || {};
-		_Y.aggregate(o.queryKey, m, true);
+		YAHOO.lang.augmentObject(o.queryKey, m, true);
 		if (o.protocol) { u += o.protocol + ':'; }
 		if (this.strictMode) {
 			if (/^(?:[^:\/?#]+:)?\/\//.test(o.source)) { u += '//'; }
@@ -1108,10 +1343,10 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 	
 	/**
      * <p>
-     * Analizing all the classes for the node, and getting the hooks.
+     * Analyze all the classes for the node, and getting the list of hooks.
      * </p>
      * @method getHooks
-     * @param {HTMLElement} node A node reference to get the className and return the hooks list.
+     * @param {Node} node A node element to get the className and return the hooks list.
      * @return {Array} The collection of hooks (string).
      */
 	obj.getHooks = function (node) {
@@ -1123,25 +1358,25 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 	};
 	/**
      * <p>
-     * getting the real YUI Button reference from a dom element, usually the target for a certain event
+     * get the real YUI Button reference from a node element, usually the target for a certain event
      * </p>
      * @method getYUIButton
-     * @param {HTMLElement} node The html element.
+     * @param {Node} node The Node element.
      * @return {Object} A reference to a real YUI Button object.
      */
 	obj.getYUIButton = function (node) {
-		// we don't have support for YUI Buttons so far.
-		return null;
+		node = this.getOwnerByClassName( node, 'yui-button' );
+		return ((node && YAHOO.widget.Button)?YAHOO.widget.Button.getButton(node.get('id')):null);
 	};
 	/**
      * <p>
-     * inserting a CSS or JS block (inline block) in the current document
+     * Inject JS and/or CSS blocks in the current page
      * </p>
      * @method inject
-     * @param {HTMLElement} node The html element.
-     * @return {Object} conf literal object with the configuration of the block to load.
+     * @param {Object} conf a literal object with the configuration of the JS and CSS that you want to insert in the page dynamically
+     * @return void
      */
-	 obj.inject = function (conf) {
+	obj.inject = function (conf) {
 		var h = document.getElementsByTagName('head')[0] || document.documentElement, s;
 		conf = conf || {};
 		if (conf.css) {
@@ -1161,7 +1396,7 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 			conf.js = conf.js.replace (_reTrim, '');
 			s.type = "text/javascript";
 			/* hack: IE doesn't support appendChild+document.createTextNode, using .text instead */
-			if (_Y.UA.ie) {
+			if (YAHOO.env.ua.ie) {
 				s.text = conf.js;
 			} else {
 				s.appendChild( document.createTextNode( conf.js ) );
@@ -1171,13 +1406,12 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 		}
 	};
 	
-	var c = window.YRegion3_config || {},
-		r = c.require || [],
-		l = c._loader || {},
+	var c = window.YRegion2_config || {},
 		root = {
 			ns: 'yregion',
+			require: c.require || [],
 			_debug: c._debug,
-			_loader: l,
+			_loader: c._loader,
 			dependencies: c.dependencies,
 			plugins: c.plugins,
 			actions: {
@@ -1185,11 +1419,6 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 					var i, m, k;
 					/* the general infrastrucure is ready */
 					_bd = this;
-					/* debug console */
-					if (this._debug) {
-						new Y.Console().render(); 
-					}
-
 					/* setting the listeners */
 					
 					// clicks events...
@@ -1201,28 +1430,7 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 						if (o.target && r) {
 							r.bubbling ('click', m, o);
 						}
-					}, this);
-					
-					// focus and blur...
-					// http://developer.yahoo.com/yui/3/event/#focusblur
-					this.node.on('focus', function(e) {
-						var o = _getSemantic(e),
-							m = _parseHooks ( o.classes ), 
-							r = _trickling(_bd, o.target);
-						m.push('focus');
-						if (o.target && r) {
-							r.bubbling ('focus', m, o);
-						}
-					}, this);
-					this.node.on('blur', function(e) {
-						var o = _getSemantic(e),
-							m = _parseHooks ( o.classes ), 
-							r = _trickling(_bd, o.target);
-						m.push('focus');
-						if (o.target && r) {
-							r.bubbling ('focus', m, o);
-						}
-					}, this);
+					});
 					
 					// mouse events
 					m =  function(e) {
@@ -1230,27 +1438,25 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 							r = _trickling(_bd, o.target), t;
 						if (o.target && r) {
 							// checking for region:mouseenter
-							if (!e.relatedTarget || !obj.isAncestor(r.node, e.relatedTarget)) {
+							if ((o.target.get('element') == r.node.get('element')) && (t = _bd.Event.getRelatedTarget (e)) && !_bd.Dom.isAncestor(r.container, t)) {
 								r.fire ('region:'+e.type, o);
 							}
 							// default mouse over message
 							r.bubbling ('mouse', e.type, o);
 						}
 					};
-					this.node.on("mouseover", m, this);
-	    			this.node.on("mouseout", m, this);
+					this.node.on("mouseover", m);
+	    			this.node.on("mouseout", m);
 					
 					// keyboard events...
-					// http://developer.yahoo.com/yui/3/event/#keylistener
 					k = function(e) {
 						_bd.broadcast ('key', e.type, _createMsgObject (e));
 					};
-					_Y.on('keypress', k, 'document');
-					_Y.on('keyup', k, 'document');
-					_Y.on('keydown', k, 'document');
+					this.Event.on(document, "keyup", k);
+					this.Event.on(document, "keydown", k);
 					
-					// window events... pending
-					_Y.on('window', "resize", function(e) {
+					// window events...
+					this.Event.on(window, "resize", function(e) {
 						_bd.broadcast ('window', 'resize', _createMsgObject (e));
 					});
 					
@@ -1265,47 +1471,39 @@ _Y.log ('[YRegion3] init an AJAX region', 'info');
 						}
 					}
 					/* extending the global region */
-					if (c.actions && _Y.Lang.isFunction(c.actions['region:ready'])) {
+					if (c.actions && this.Lang.isFunction(c.actions['region:ready'])) {
 						c.actions['region:ready'].apply (this, []);
 					}
 					this.install ((c.actions || {}));
 				},
 				'click:click': function () {
-					_Y.log ('[YRegion3] global "click:click": ', 'info', arguments);
+					YAHOO.log ('[YRegion2] global "click:click": ', arguments);
 				}
 			},
-			waiting: function (f) {
+			onAvailable: function (f) {
 				var that = this;
-				/* waiting until the body element become available, probably we should wait until domready instead  */
-				_Y.on("domready", function() {
-					that.node = that.Y.get('body');
-					f.apply(that.node, []);
-				});
-				return this; /* chaining */
+				/* waiting for the document.body element */
+				YAHOO.log ('[YRegion2] waiting for the document.body element');
+				if (!document.body) {
+					that._handle = setInterval(function() {
+						try {
+							// throws an error if document.body is not exist
+							if (YAHOO.lang.isObject(document.body)) {
+								clearInterval(that._handle);
+								f.apply (document.body, []);
+							}
+						} catch (e) {
+						}
+					}, YAHOO.util.Event.POLL_INTERVAL);
+				} else {
+					f.apply (document.body, []);
+				}
 			},
 			args: {}
 		};
 
-	// injecting the default list of requirements 
-	r.push("yui", "oop", "event", "dom", "node", "io-base", "io-queue");
-
-	// default filter based on the debug flag
-	if (c._debug) {
-		l.filter = 'debug';	
-		r.push('console');
-	}
+	/* global region definition: document.body */
+	_initRegion((c.guid?c.guid:'yregion'), root);
 	
-	/* saving the requirements list */
-	root.require = Array.prototype.slice.call(r, 0);
-
-	/* creating the global loader object */
-	_Y = YUI(l);
-	/* inserting the default requirements (Y.use) */
-	r.push(function(Y) {
-		/* global region definition: document.body */
-		_initRegion((c.guid?c.guid:'yregion'), root);
-	});
-	_Y.use.apply(_Y, r);
-
 	return obj;
 }();
