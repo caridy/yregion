@@ -1,0 +1,1548 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns:yui="http://yuilibrary.com/rdf/1.0/yui.rdf#">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<title>API: yregion2  RegionDefinition2   (YRegion Utility)</title>
+
+	<link rel="stylesheet" type="text/css" href="assets/reset-fonts-grids-min.css?stamp=" />
+	<link rel="stylesheet" type="text/css" href="assets/api.css?stamp=" />
+
+    <script type="text/javascript" src="assets/api-js?stamp="></script>
+    <script type="text/javascript" src="assets/ac-js?stamp="></script>
+</head>
+
+<body id="yahoo-com">
+
+<div id="doc3" class="yui-t2">
+	<div id="hd">
+        <h1><a href="#" title="YRegion Utility - YUI Extension">YRegion Utility - YUI Extension</a></h1>
+        <h3>yregion2&nbsp; <span class="subtitle">1.0.0</span></h3>
+        <a href="./index.html" title="YRegion Utility">YRegion Utility</a> 
+            &gt; <a href="./module_yregion2.html" title="yregion2">yregion2</a>
+                 &gt; RegionDefinition2 
+                
+        <form onsubmit="return false">
+            <div id="propertysearch">
+                Search: <input autocomplete="off" id="searchinput" />
+                <div id="searchresults">
+                    &nbsp;
+                </div>
+            </div>
+        </form>
+	</div>
+
+	<div id="bd">
+		<div id="yui-main">
+			<div class="yui-b">
+            <form action="#" name="yui-classopts-form" method="get" id="yui-classopts-form">
+                <fieldset>
+                    <legend>Filters</legend>
+                <span class="classopts"><input type="checkbox" name="show_private" id="show_private" /> <label for="show_private">Show Private</label></span>
+                <span class="classopts"><input type="checkbox" name="show_protected" id="show_protected" /> <label for="show_protected">Show Protected</label></span>
+                <span class="classopts"><input type="checkbox" name="show_deprecated" id="show_deprecated" /> <label for="show_deprecated">Show Deprecated</label></span>
+                </fieldset>
+            </form>
+
+                    <h2>
+                        
+
+                        <code>static</code>
+                        
+                            Class <b property="yui:name">RegionDefinition2</b>
+                        <span class="extends">
+                        </span>
+
+                    </h2>
+                    <!-- class tree goes here -->
+                    
+                
+  
+
+                    <div class="summary description" property="yui:description">
+                        Provides a set of generic methods that each region instance inherits automatically.
+                    </div>
+
+                    
+                    <div rel="yui:properties" resource="#properties">
+
+                    </div>
+
+                    <div rel="yui:methods" resource="#methods">
+                        <div class="section method details">
+                            <h3 id="methods">Methods</h3>
+                            <div class="content">
+                                    <div class="" rel="yui:method" resource="#method_addToBody">
+                                    <h4>
+                                        <a name="method_addToBody">addToBody</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">addToBody</strong>
+                                           (
+                                                
+                                                        
+                                                         bd
+                                                    
+                                                
+                                                        , 
+                                                         mod
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Add a new DOM structure (content or DOM representation) into the region or a node element within the region
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">bd</span>
+                                                        &lt;<span property="yui:type">String|Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> an string or a object that represent a DOM element thru a literal</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">mod</span>
+                                                        &lt;<span property="yui:type">Node</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> configuration object for the child region that should be initialized.</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_broadcast">
+                                    <h4>
+                                        <a name="method_broadcast">broadcast</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Boolean
+                                            <strong property="yui:name">broadcast</strong>
+                                           (
+                                                
+                                                        
+                                                         message
+                                                    
+                                                
+                                                        , 
+                                                         o
+                                                    
+                                                
+                                                        , 
+                                                         flag
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Process a message, and broadcasting the message to all the child regions
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">message</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the name of the message</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">o</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> Literal object to pass thru all the actions.</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">flag</span>
+                                                        &lt;<span property="yui:type">Boolean</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> if true only broadcast the event, not local confirmation.</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Boolean
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">Whether or not a listener stop the execution or return false.</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_bubbling">
+                                    <h4>
+                                        <a name="method_bubbling">bubbling</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Boolean
+                                            <strong property="yui:name">bubbling</strong>
+                                           (
+                                                
+                                                        
+                                                         layer
+                                                    
+                                                
+                                                        , 
+                                                         msgs
+                                                    
+                                                
+                                                        , 
+                                                         o
+                                                    
+                                                
+                                                        , 
+                                                         flag
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Process a list of messages, and bubble up those messages all the way up thru the parents
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">layer</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the name of the event</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">msgs</span>
+                                                        &lt;<span property="yui:type">Array|String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> The collection of messages.</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">o</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> Literal object to pass thru all the actions.</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">flag</span>
+                                                        &lt;<span property="yui:type">Boolean</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> if true only bubble up the event, not local confirmation.</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Boolean
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">Whether or not a listener stop the execution or return false.</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_destroy">
+                                    <h4>
+                                        <a name="method_destroy">destroy</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        
+                                            <strong property="yui:name">destroy</strong>
+                                           (
+                                                
+                                                        
+                                                         arg
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Destroy the region object. Only the parent, the application layer, a region that knows this region, or the region itself 
+can destroy the region. 
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">arg</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> Literal object with more information about the destroy action.</span>
+                                                        </dd>
+                                                </dl>
+
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_execute">
+                                    <h4>
+                                        <a name="method_execute">execute</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">execute</strong>
+                                           (
+                                                
+                                                        
+                                                         command
+                                                    
+                                                
+                                                        , 
+                                                         args
+                                                    
+                                                
+                                                        , 
+                                                         callback
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Execute an AJAX command, sending a request to the server, and calling the corresponding callback
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">command</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the value for the command object passed thru the AJAX request as GET (command=value)</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">args</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> Literal object with a set of post argument to send thru the AJAX request.</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">callback</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> a function or an object that represent a callback for the AJAX request.</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">a YUI Connection Manager handle object.</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_fire">
+                                    <h4>
+                                        <a name="method_fire">fire</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        boolean
+                                            <strong property="yui:name">fire</strong>
+                                           (
+                                                
+                                                        
+                                                         layer
+                                                    
+                                                
+                                                        , 
+                                                         o
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            Fire a message across the region
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">layer</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the name of the message to fire</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">o</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> literal object to attach to the message</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        boolean
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">the execution result, true if a listener stop the execution.</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_get">
+                                    <h4>
+                                        <a name="method_get">get</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Node
+                                            <strong property="yui:name">get</strong>
+                                           (
+                                                
+                                                        
+                                                         xpath
+                                                    
+                                                
+                                                        , 
+                                                         node
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+getting a node element based on the CSS selector.
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">xpath</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> for the desired element.</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">node</span>
+                                                        &lt;<span property="yui:type">Node</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> only if you want to be more specific, using this node as the root element for the search.</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Node
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">the first node element for the specific query</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_getChild">
+                                    <h4>
+                                        <a name="method_getChild">getChild</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">getChild</strong>
+                                           (
+                                                
+                                                        
+                                                         guid
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+getting a child region based on the GUID.
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">guid</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> for a child region.</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">a reference to a child region</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_getViewport">
+                                    <h4>
+                                        <a name="method_getViewport">getViewport</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">getViewport</strong>
+                                           (
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            Return the visualization properties for the current region
+The viewport obj looks like this: 
+<p>
+{x:10, y:10, width: 10, height: 10, ... }
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">the literal object with the viewport properties</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_include">
+                                    <h4>
+                                        <a name="method_include">include</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">include</strong>
+                                           (
+                                                
+                                                        
+                                                         mods
+                                                    
+                                                
+                                                        , 
+                                                         files
+                                                    
+                                                
+                                                        , 
+                                                         callback
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+include a set or requirements and dependencies before intanciate the region
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">mods</span>
+                                                        &lt;<span property="yui:type">Array</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> set of YUI modules that most be included in the current page</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">files</span>
+                                                        &lt;<span property="yui:type">Array</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> set of files that should be included in the current page</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">callback</span>
+                                                        &lt;<span property="yui:type">Function</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> a function to call when the YUI modules and the files get loaded</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_init">
+                                    <h4>
+                                        <a name="method_init">init</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">init</strong>
+                                           (
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+execute the internal initialization process for the region
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_initChild">
+                                    <h4>
+                                        <a name="method_initChild">initChild</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">initChild</strong>
+                                           (
+                                                
+                                                        
+                                                         guid
+                                                    
+                                                
+                                                        , 
+                                                         mod
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Init a child region instance
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">guid</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the global unique identifier for a child region</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">mod</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> configuration object for the child region that should be initialized.</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_initPlugin">
+                                    <h4>
+                                        <a name="method_initPlugin">initPlugin</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">initPlugin</strong>
+                                           (
+                                                
+                                                        
+                                                         name
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+inject a plugin within the region
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">name</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the plugin that should be injected within the region</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_install">
+                                    <h4>
+                                        <a name="method_install">install</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">install</strong>
+                                           (
+                                                
+                                                        
+                                                         plugin
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+plug all the actions defined by a plugin within the region
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">plugin</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> a object with the plugin definition</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_on">
+                                    <h4>
+                                        <a name="method_on">on</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        object
+                                            <strong property="yui:name">on</strong>
+                                           (
+                                                
+                                                        
+                                                         layer
+                                                    
+                                                
+                                                        , 
+                                                         listener
+                                                    
+                                                
+                                                        , 
+                                                         args
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            Set a new listener for an specific message
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">layer</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the name of the message to listen for</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">listener</span>
+                                                        &lt;<span property="yui:type">Function</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> callback function</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">args</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> literal object that you want to use when this listener get executed</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_onAvailable">
+                                    <h4>
+                                        <a name="method_onAvailable">onAvailable</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">onAvailable</strong>
+                                           (
+                                                
+                                                        
+                                                         f
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Waiting until the DOM element that represents the region become available
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">f</span>
+                                                        &lt;<span property="yui:type">Function</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> a function to call when the DOM element that represent the region become available</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_ready">
+                                    <h4>
+                                        <a name="method_ready">ready</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">ready</strong>
+                                           (
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+get the region ready when all the requiredment, dependencies and DOM element available
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_setBody">
+                                    <h4>
+                                        <a name="method_setBody">setBody</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">setBody</strong>
+                                           (
+                                                
+                                                        
+                                                         bd
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Set a new content for the region
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">bd</span>
+                                                        &lt;<span property="yui:type">String|Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the string to be set as a content of the region</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_setChild">
+                                    <h4>
+                                        <a name="method_setChild">setChild</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">setChild</strong>
+                                           (
+                                                
+                                                        
+                                                         mod
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Set a new child for the current region.
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">mod</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> configuration object for a new child region.</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_setContent">
+                                    <h4>
+                                        <a name="method_setContent">setContent</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">setContent</strong>
+                                           (
+                                                
+                                                        
+                                                         xpath
+                                                    
+                                                
+                                                        , 
+                                                         bd
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Set a new content for node element within the region
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">xpath</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> a selector to localize an node element within the region</span>
+                                                        </dd>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">bd</span>
+                                                        &lt;<span property="yui:type">String|Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the string to be set as a content of the node</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_setViewport">
+                                    <h4>
+                                        <a name="method_setViewport">setViewport</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        object
+                                            <strong property="yui:name">setViewport</strong>
+                                           (
+                                                
+                                                        
+                                                         o
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            Set new dimention properties for the current region
+The viewport o configuration looks like this: 
+<p>
+{width: 10, height: 10, ... }
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">o</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> literal object with the new configuration for the viewport</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_signature">
+                                    <h4>
+                                        <a name="method_signature">signature</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">signature</strong>
+                                           (
+                                                
+                                                        
+                                                         args
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Sign a set of arguments based on a flagged property. If another listener had claim the message,
+setting the flagged to true, which means that no other listener should consume this message.
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">args</span>
+                                                        &lt;<span property="yui:type">Object</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> literal object to sign</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">the literal object with the signed arguments, null if the signing process fail.</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_use">
+                                    <h4>
+                                        <a name="method_use">use</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">use</strong>
+                                           (
+                                                
+                                                        
+                                                         Arguments
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+insert a set of YUI Modules and execute a callback method. The last argument in the list is the callback function
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">Arguments</span>
+                                                        &lt;<span property="yui:type">Array</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"></span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                                    <div class="" rel="yui:method" resource="#method_wakeChild">
+                                    <h4>
+                                        <a name="method_wakeChild">wakeChild</a></h4>
+                                    <div class="detail" >
+                                        <code>
+                                        
+                                        
+                                        
+                                        Object
+                                            <strong property="yui:name">wakeChild</strong>
+                                           (
+                                                
+                                                        
+                                                         guid
+                                                    
+                                                
+                                            )
+                                        </code>
+                                        
+                                        <div class="description" property="yui:description">
+                                            <p>
+Wake a child region, initializing a lazyload region instance
+</p>
+                                        </div>
+
+                                        <div class="description">
+
+                                                <dl rel="yui:parameters">
+                                                    <dt>Parameters:</dt>
+                                                        <dd rel="yui:parameter">
+                                                        <code><span property="yui:name">guid</span>
+                                                        &lt;<span property="yui:type">String</span>&gt;
+                                                        </code>
+                                                        <span property="yui:description"> the global unique identifier for a child region</span>
+                                                        </dd>
+                                                </dl>
+
+                                                <dl>
+                                                    <dt>Returns:
+                                                    <code property="yui:return">
+                                                        Object
+                                                    </code></dt>
+                                                    <dd property="yui:returnInfo">region reference to support chaining</dd>
+                                                </dl>
+
+
+             
+
+                                        </div>
+
+                                    </div>
+                                    <hr />
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div rel="yui:events" resource="#events">
+
+
+                    </div>
+
+                    <div rel="yui:attributes" resource="#configattributes">
+
+                    </div>
+
+			</div>
+		</div>
+		<div class="yui-b">
+            <div class="nav">
+
+                    <div id="moduleList" class="module">
+                        <h4>Modules</h4>
+                        <ul class="content">
+                                <li class="selected"><a href="module_yregion2.html" title="yregion2">yregion2</a></li>
+                                <li class=""><a href="module_yregion3.html" title="yregion3">yregion3</a></li>
+                        </ul>
+                    </div>
+
+                    <div id="classList" class="module">
+                        <h4>Classes</h4>
+                        <ul class="content">
+                                <li class="selected"><a href="RegionDefinition2.html" title="RegionDefinition2">RegionDefinition2</a></li>
+                                <li class=""><a href="RegionLoader2.html" title="RegionLoader2">RegionLoader2</a></li>
+                                <li class=""><a href="YRegion2.html" title="YRegion2">YRegion2</a></li>
+                        </ul>
+                    </div>
+
+                    <div id="fileList" class="module">
+                        <h4>Files</h4>
+                        <ul class="content">        
+                                <li class=""><a href="yregion2.js.html" title="yregion2.js">yregion2.js</a></li>
+                                <li class=""><a href="yregion3.js.html" title="yregion3.js">yregion3.js</a></li>
+                        </ul>
+                    </div>
+
+
+                    <div id="methodsList" class="module">
+                        <h4>Methods</h4>
+                        <ul class="content">        
+                                <li class=""><a href="#method_addToBody" title="addToBody">addToBody</a></li>
+                                <li class=""><a href="#method_broadcast" title="broadcast">broadcast</a></li>
+                                <li class=""><a href="#method_bubbling" title="bubbling">bubbling</a></li>
+                                <li class=""><a href="#method_destroy" title="destroy">destroy</a></li>
+                                <li class=""><a href="#method_execute" title="execute">execute</a></li>
+                                <li class=""><a href="#method_fire" title="fire">fire</a></li>
+                                <li class=""><a href="#method_get" title="get">get</a></li>
+                                <li class=""><a href="#method_getChild" title="getChild">getChild</a></li>
+                                <li class=""><a href="#method_getViewport" title="getViewport">getViewport</a></li>
+                                <li class=""><a href="#method_include" title="include">include</a></li>
+                                <li class=""><a href="#method_init" title="init">init</a></li>
+                                <li class=""><a href="#method_initChild" title="initChild">initChild</a></li>
+                                <li class=""><a href="#method_initPlugin" title="initPlugin">initPlugin</a></li>
+                                <li class=""><a href="#method_install" title="install">install</a></li>
+                                <li class=""><a href="#method_on" title="on">on</a></li>
+                                <li class=""><a href="#method_onAvailable" title="onAvailable">onAvailable</a></li>
+                                <li class=""><a href="#method_ready" title="ready">ready</a></li>
+                                <li class=""><a href="#method_setBody" title="setBody">setBody</a></li>
+                                <li class=""><a href="#method_setChild" title="setChild">setChild</a></li>
+                                <li class=""><a href="#method_setContent" title="setContent">setContent</a></li>
+                                <li class=""><a href="#method_setViewport" title="setViewport">setViewport</a></li>
+                                <li class=""><a href="#method_signature" title="signature">signature</a></li>
+                                <li class=""><a href="#method_use" title="use">use</a></li>
+                                <li class=""><a href="#method_wakeChild" title="wakeChild">wakeChild</a></li>
+                        </ul>
+                    </div>
+
+
+
+            </div>
+		</div>
+	</div>
+	<div id="ft">
+        <hr />
+        Copyright &copy; 2009 Yahoo! Inc. All rights reserved.
+	</div>
+</div>
+<script type="text/javascript">
+    ALL_YUI_PROPS = [{"url": "RegionDefinition2.html#method_addToBody", "access": "", "host": "RegionDefinition2", "type": "method", "name": "addToBody"}, {"url": "YRegion2.html#method_augmentURI", "access": "", "host": "YRegion2", "type": "method", "name": "augmentURI"}, {"url": "YRegion2.html#method_broadcast", "access": "", "host": "YRegion2", "type": "method", "name": "broadcast"}, {"url": "RegionDefinition2.html#method_broadcast", "access": "", "host": "RegionDefinition2", "type": "method", "name": "broadcast"}, {"url": "RegionDefinition2.html#method_bubbling", "access": "", "host": "RegionDefinition2", "type": "method", "name": "bubbling"}, {"url": "YRegion2.html#method_clearRegion", "access": "", "host": "YRegion2", "type": "method", "name": "clearRegion"}, {"url": "RegionLoader2.html#method_create", "access": "", "host": "RegionLoader2", "type": "method", "name": "create"}, {"url": "RegionDefinition2.html#method_destroy", "access": "", "host": "RegionDefinition2", "type": "method", "name": "destroy"}, {"url": "YRegion2.html#method_destroyRegion", "access": "", "host": "YRegion2", "type": "method", "name": "destroyRegion"}, {"url": "RegionDefinition2.html#method_execute", "access": "", "host": "RegionDefinition2", "type": "method", "name": "execute"}, {"url": "RegionDefinition2.html#method_fire", "access": "", "host": "RegionDefinition2", "type": "method", "name": "fire"}, {"url": "RegionDefinition2.html#method_get", "access": "", "host": "RegionDefinition2", "type": "method", "name": "get"}, {"url": "RegionDefinition2.html#method_getChild", "access": "", "host": "RegionDefinition2", "type": "method", "name": "getChild"}, {"url": "YRegion2.html#method_getHooks", "access": "", "host": "YRegion2", "type": "method", "name": "getHooks"}, {"url": "YRegion2.html#method_getOwnerByClassName", "access": "", "host": "YRegion2", "type": "method", "name": "getOwnerByClassName"}, {"url": "YRegion2.html#method_getOwnerByTagName", "access": "", "host": "YRegion2", "type": "method", "name": "getOwnerByTagName"}, {"url": "RegionDefinition2.html#method_getViewport", "access": "", "host": "RegionDefinition2", "type": "method", "name": "getViewport"}, {"url": "YRegion2.html#method_getYUIButton", "access": "", "host": "YRegion2", "type": "method", "name": "getYUIButton"}, {"url": "RegionDefinition2.html#method_include", "access": "", "host": "RegionDefinition2", "type": "method", "name": "include"}, {"url": "RegionDefinition2.html#method_init", "access": "", "host": "RegionDefinition2", "type": "method", "name": "init"}, {"url": "RegionDefinition2.html#method_initChild", "access": "", "host": "RegionDefinition2", "type": "method", "name": "initChild"}, {"url": "YRegion2.html#method_initPlugin", "access": "", "host": "YRegion2", "type": "method", "name": "initPlugin"}, {"url": "RegionDefinition2.html#method_initPlugin", "access": "", "host": "RegionDefinition2", "type": "method", "name": "initPlugin"}, {"url": "YRegion2.html#method_initRegion", "access": "", "host": "YRegion2", "type": "method", "name": "initRegion"}, {"url": "YRegion2.html#method_inject", "access": "", "host": "YRegion2", "type": "method", "name": "inject"}, {"url": "RegionDefinition2.html#method_install", "access": "", "host": "RegionDefinition2", "type": "method", "name": "install"}, {"url": "YRegion2.html#method_isPlugin", "access": "", "host": "YRegion2", "type": "method", "name": "isPlugin"}, {"url": "YRegion2.html#method_isRegion", "access": "", "host": "YRegion2", "type": "method", "name": "isRegion"}, {"url": "RegionLoader2.html#method_load", "access": "", "host": "RegionLoader2", "type": "method", "name": "load"}, {"url": "YRegion2.html#method_notify", "access": "", "host": "YRegion2", "type": "method", "name": "notify"}, {"url": "RegionLoader2.html#method_notify", "access": "", "host": "RegionLoader2", "type": "method", "name": "notify"}, {"url": "RegionDefinition2.html#method_on", "access": "", "host": "RegionDefinition2", "type": "method", "name": "on"}, {"url": "RegionDefinition2.html#method_onAvailable", "access": "", "host": "RegionDefinition2", "type": "method", "name": "onAvailable"}, {"url": "RegionDefinition2.html#method_ready", "access": "", "host": "RegionDefinition2", "type": "method", "name": "ready"}, {"url": "RegionLoader2.html#method_set", "access": "", "host": "RegionLoader2", "type": "method", "name": "set"}, {"url": "RegionDefinition2.html#method_setBody", "access": "", "host": "RegionDefinition2", "type": "method", "name": "setBody"}, {"url": "RegionDefinition2.html#method_setChild", "access": "", "host": "RegionDefinition2", "type": "method", "name": "setChild"}, {"url": "RegionDefinition2.html#method_setContent", "access": "", "host": "RegionDefinition2", "type": "method", "name": "setContent"}, {"url": "YRegion2.html#method_setPluginDefinition", "access": "", "host": "YRegion2", "type": "method", "name": "setPluginDefinition"}, {"url": "YRegion2.html#method_setRegionDefinition", "access": "", "host": "YRegion2", "type": "method", "name": "setRegionDefinition"}, {"url": "RegionDefinition2.html#method_setViewport", "access": "", "host": "RegionDefinition2", "type": "method", "name": "setViewport"}, {"url": "RegionDefinition2.html#method_signature", "access": "", "host": "RegionDefinition2", "type": "method", "name": "signature"}, {"url": "RegionLoader2.html#method_subscribe", "access": "", "host": "RegionLoader2", "type": "method", "name": "subscribe"}, {"url": "RegionDefinition2.html#method_use", "access": "", "host": "RegionDefinition2", "type": "method", "name": "use"}, {"url": "RegionDefinition2.html#method_wakeChild", "access": "", "host": "RegionDefinition2", "type": "method", "name": "wakeChild"}];
+</script>
+</body>
+</html>

@@ -1272,7 +1272,7 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion2] Firing a message: ', 
 		}
 		return node;
     };
-    /*
+    /**
      * <p>
      * Searching for an event owner based on the tagMame, it's similar to the ancestor method but applying the same routine to the node itself
      * </p>
@@ -1294,14 +1294,14 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion2] Firing a message: ', 
 	};
 	obj.strictMode = true; /* default mode for the URIs in your website */
 	/**
-    * <p>
-    * Augment an url with more parameters, overriding...
-    * </p>
-    * @public
-    * @param {string} url 
-    * @param {string|array} m   an string like a query string or an json object
-    * @return string
-    */
+     * <p>
+     * Augment an url with more parameters, overriding...
+     * </p>
+     * @public
+     * @param {string} url 
+     * @param {string|array} m   an string like a query string or an json object
+     * @return string
+     */
     obj.augmentURI = function( url, m ) {
 		m = m || {};
 	    var o = _parseUri(url, this.strictMode),
@@ -1339,8 +1339,6 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion2] Firing a message: ', 
 		}
 		return u;
     };
-	
-	
 	/**
      * <p>
      * Analyze all the classes for the node, and getting the list of hooks.
