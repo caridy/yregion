@@ -1503,5 +1503,8 @@ if (layer.indexOf('mouse') !== 0) { YAHOO.log ('[YRegion2] Firing a message: ', 
 	/* global region definition: document.body */
 	_initRegion((c.guid?c.guid:'yregion'), root);
 	
+	// triggering this: YAHOO.util.Event.throwErrors = true; //for debug.
+	
+	
 	return obj;
 }();
