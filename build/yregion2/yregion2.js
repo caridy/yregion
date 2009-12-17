@@ -113,19 +113,15 @@ YRegion2 = window.YRegion2 || function() {
      */
     function _loaderDispatch () {
         if (_loaderQueue.length > 0) {
-            YAHOO.log ('[YRegion2] [Loader Queue] loading: '+_loaderQueue[0].require.join(), "info", _loaderQueue[0].require);
             _loaderObj.require(_loaderQueue[0].require);
             _loaderObj.insert({
                 onSuccess: function() {
-                    YAHOO.log ('[YRegion2] [Loader Queue] success', "info");
                     _loaderNext(true);
                 },
                 onFailure: function () {
-                    YAHOO.log ('[YRegion2] [Loader Queue] failure', "error");
                     _loaderNext();
                 },
                 onTimeout: function() {
-                    YAHOO.log ('[YRegion2] [Loader Queue] timeout', "error");
                     _loaderNext();
                 }
             }, _loaderQueue[0].type);
@@ -222,7 +218,6 @@ YRegion2 = window.YRegion2 || function() {
             mod.ondomready = false;
             /* a region can wait until onDOMReady */
             YAHOO.util.Event.onDOMReady (function(o) {
-                YAHOO.log ('[YRegion2] init region on DOMReady '+guid, 'info');
                 obj.initRegion(guid, mod);
             });
         } else {
@@ -354,7 +349,6 @@ YRegion2 = window.YRegion2 || function() {
         load: function (uri, callback) {
             callback = callback || {};
             // loading the definition for the region
-            YAHOO.log ('In debug mode, all regions definitions will get a timestamp to avoid caching: '+(this._debug?(uri += ((uri.indexOf('?') == -1)?'?':'&') + "rnd=" + new Date().valueOf().toString()):uri), 'warn');
             return YAHOO.util.Get.script(uri, callback);
         },
         /**
@@ -445,7 +439,6 @@ YRegion2 = window.YRegion2 || function() {
          * @return {Object} region reference to support chaining
          */
         init: function () {
-            YAHOO.log ('[YRegion2] creating: '+ this.guid, 'info');
             var f, i, files = [], r, l, that = this;
             /* filtering get and post arguments for the server side */
             this.getargs = (this.getargs?this.getargs:{});
@@ -465,18 +458,14 @@ YRegion2 = window.YRegion2 || function() {
                     this.dependencies[i] = f;
                 }
                 if (f.fullpath && (!_cached(f))) {
-                    YAHOO.log ('In debug mode, all dependencies will get a timestamp to avoid caching: '+(this._debug?(f.fullpath += ((f.fullpath.indexOf('?') == -1)?'?':'&') + "rnd=" + new Date().valueOf().toString()):f.fullpath), 'warn');
                     files.push (f.fullpath);
                 }
             }
-            YAHOO.log ('[YRegion2] loading the requirements for region '+this.guid+': '+r.join(), 'info');
             f = function () {
                 var el = this;
                 that.container = el;
-                YAHOO.log ('[YRegion2] the DOM element for the region is ready: '+that.guid, 'info');
                 /* if the region have a wrapper, we can assume that we need to create the container within that wrapper */
                 if (that.wrapper) {
-                    YAHOO.log ('[YRegion2] creating the container for the area: '+that.guid, 'info');
                     this.addToBody({
                         attributes: {
                             id: that.guid
@@ -486,7 +475,6 @@ YRegion2 = window.YRegion2 || function() {
                 }
                 /* if the region is an AJAX region, it shoult be loaded dynamically using YUI Connection Manager */
                 if (that.ajax) {
-                    YAHOO.log ('[YRegion2] init an AJAX region');
                     /* we shoudl use ajax to load the content of the region */
                     YAHOO.lang.augmentObject(that, _getShorthands());
                     that.execute('render', {}, function(o) {
@@ -523,12 +511,9 @@ YRegion2 = window.YRegion2 || function() {
         onAvailable: function (f) {
             /* no wrapper or the wrapper is an ID, we should wait until the guid or the wrapper become available */
             var c = this.wrapper || this.guid, el;
-            YAHOO.log ('[YRegion2] the dependencies are ready, now we need to wait for the DOM element: '+ this.guid, 'info');
             if (YAHOO.util.Dom.inDocument(c) && (el = YAHOO.util.Dom.get(c))) {
-              YAHOO.log ('[YRegion2] [onAvailable] the element is already in the DOM: '+ this.guid, 'info');
               f.apply (el, []);
             } else {
-              YAHOO.log ('[YRegion2] [onAvailable] Using YUI Event onAvailable to wait for the element'+ this.guid, 'info');
               YAHOO.util.Event.onAvailable (c, f);
             }
             return this; /* chaining */
@@ -572,7 +557,6 @@ YRegion2 = window.YRegion2 || function() {
             }
             this.fire(MSG_REGION_READY);
             YAHOO.util.Event.onContentReady (this.guid, function () {
-                YAHOO.log ('[YRegion2] region is ready to be expanded: '+ that.guid, 'info');
                 that.fire('region:contentready');
                 /* also, yregion support integration with unit test */
                 that.bubbling('test', 'ready', {
@@ -596,7 +580,6 @@ YRegion2 = window.YRegion2 || function() {
                 for (a in plugin) {
                     if (plugin.hasOwnProperty(a)) {
                         this.on(a, plugin[a]);
-                        YAHOO.log ('[YRegion2] adding a new message for region '+ this.guid+': '+ a, 'info');
                     }
                 }
             }
@@ -611,7 +594,6 @@ YRegion2 = window.YRegion2 || function() {
          * @return {Object} region reference to support chaining
          */
         initPlugin: function (name) {
-             YAHOO.log ('[YRegion2] Adopting a new plugin ('+name+'): '+(_PLUGINS.hasOwnProperty(name)?'success':'failure'), 'info');
              if (_PLUGINS.hasOwnProperty(name)) {
               this.install(_PLUGINS[name]);
             }
@@ -661,7 +643,6 @@ YRegion2 = window.YRegion2 || function() {
             if (callback) {
               mods.push (function(M) {
                 // loading the inclusions
-                YAHOO.log ('[YRegion2] the requirements are ready, now we need to load the dependencies: '+ f.join(), 'info');
                 if (YAHOO.lang.isArray(f) && (f.length > 0)) {
                     YAHOO.util.Get.script(f, { 
                       onSuccess: function(o) {
@@ -693,7 +674,6 @@ YRegion2 = window.YRegion2 || function() {
         setContent: function (xpath, bd) {
             // {@caridy: TODO: apply the guid filter to this selector as well}
             var el = YAHOO.util.Selector.query(xpath, this.container, true); 
-            YAHOO.log ('[YRegion2] SetContent thru xpath  ('+xpath+'): '+(el?'success':'failure'), 'info'); 
             if (el) {
                 // purge the child elements and the events attached...
                 for (var i=0;i<el.childNodes.length;i++) {
@@ -964,7 +944,6 @@ YRegion2 = window.YRegion2 || function() {
             o.flagged = false; /* you can't stop a broadcast message */
             if (!flag) { /* there is not need to send the messages for the current region */
               this.fire(layer + ":" + msg, o);
-              YAHOO.log ('[YRegion2] new broadcast message for region'+ this.guid+': ['+layer + ":" + msg+']', 'info');
             }
             /* initializing the child regions */
             if (this.childs) {
@@ -1014,7 +993,6 @@ YRegion2 = window.YRegion2 || function() {
                 }
             }
             if (YAHOO.util.Connect) {
-                YAHOO.log ('[YRegion2] executing action: '+ uri, 'info');
                 /* defining the default behavior */
                 c = {
                     success: function(o) {
@@ -1176,7 +1154,6 @@ YRegion2 = window.YRegion2 || function() {
      * @return void
      */
     obj.destroyRegion = function (conf) {
-        YAHOO.log ('[YRegion2] Destroying a region ('+conf.guid+'): '+((conf && conf.guid && conf.ns && _MODS.hasOwnProperty(conf.guid) && (conf === _MODS[conf.guid]))?'sucess':'failure: someone is trying the remove a region (only the region itself can do this call)'), 'warn');
         if (conf && conf.guid && conf.ns && _MODS.hasOwnProperty(conf.guid) && (conf === _MODS[conf.guid])) {
           delete _MODS[conf.guid];
         }
@@ -1191,7 +1168,6 @@ YRegion2 = window.YRegion2 || function() {
      */
     obj.clearRegion = function (guid) {
         if (_MODS.hasOwnProperty(guid)) {
-            YAHOO.log ('[YRegion2] removing the region manually: '+ guid, 'warn');
             _MODS[guid].destroy ({partial: true});
         }
     };
@@ -1467,7 +1443,6 @@ YRegion2 = window.YRegion2 || function() {
             onAvailable: function (f) {
                 var that = this;
                 /* waiting for the document.body element */
-                YAHOO.log ('[YRegion2] waiting for the document.body element');
                 if (!document.body) {
                     that._handle = setInterval(function() {
                         try {
